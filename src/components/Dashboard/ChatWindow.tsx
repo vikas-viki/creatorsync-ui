@@ -5,12 +5,11 @@ import { useChatStore } from '../../stores/chatStore';
 import CreateVideoRequestModal from '../Modals/CreateVideoRequestModal';
 import VideoPreviewModal from '../Modals/VideoPreviewModal';
 import ApproveVideoModal from '../Modals/ApproveVideoModal';
-import { Message } from '../../lib/chatStoreTypes';
 import toast from 'react-hot-toast';
 import axios, { isAxiosError } from 'axios';
 
 const ChatWindow: React.FC = () => {
-  const { activeChat, addMessage, messages, mediaMessage } = useChatStore();
+  const { activeChat, addTextMessage, messages, mediaMessage } = useChatStore();
   const { user } = useChatStore();
   const [messageText, setMessageText] = useState('');
   const [showCreateVideoRequest, setShowCreateVideoRequest] = useState(false);
@@ -21,18 +20,10 @@ const ChatWindow: React.FC = () => {
 
   if (!activeChat || !user) return null;
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageText.trim()) return;
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: messageText,
-      senderId: user.userId,
-      createdAt: new Date(),
-      type: 'text'
-    };
-
-    addMessage(activeChat, newMessage);
+    await addTextMessage(activeChat.id, messageText.trim());
     setMessageText('');
   };
 
@@ -58,7 +49,8 @@ const ChatWindow: React.FC = () => {
         }
 
         const formData = new FormData();
-        const data = await mediaMessage(file.type, activeChat.id);
+        const url = URL.createObjectURL(file);
+        const data = await mediaMessage(file.type, activeChat.id, url);
 
         if (!data) return;
 
@@ -66,10 +58,7 @@ const ChatWindow: React.FC = () => {
         formData.append('file', file);
         formData.append("Content-Type", file.type);
 
-        const res = await axios.post(data.url, formData);
-
-        console.log(res.data);
-        // addMessage(activeChat, newMessage);
+        await axios.post(data.url, formData);
       }
     } catch (e) {
       if (isAxiosError(e)) {

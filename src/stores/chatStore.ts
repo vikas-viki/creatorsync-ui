@@ -12,10 +12,10 @@ export interface ChatStore {
   setChats: (chats: Chat[]) => void;
   addChat: (chatId: string) => Promise<void>;
   getAllChats: () => Promise<void>;
-  mediaMessage: (contentType: string, chatId: string) => Promise<SignedUrlResponse | undefined>;
+  mediaMessage: (contentType: string, chatId: string, url: string) => Promise<SignedUrlResponse | undefined>;
   deleteChat: (chatId: string) => void;
   setActiveChat: (chatId: ActiveChat | null) => void;
-  addMessage: (chat: ActiveChat, message: Message) => void;
+  addTextMessage: (chatId: string, message: string) => Promise<void>;
   addVideoRequest: (chatId: string, request: VideoRequest) => void;
   updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
   updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
@@ -37,8 +37,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
   activeChat: null,
   mediaMessage: axiosErrorHandler(
-    async (contentType: string, chatId: string) => {
+    async (contentType: string, chatId: string, url: string) => {
       const res = await api.post("/chat/message/media", { contentType, chatId });
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [chatId]: [...state.messages[chatId], {
+            createdAt: new Date(),
+            id: "",
+            content: url,
+            senderId: state.user!.userId,
+            type: contentType.startsWith("image") ? "image" : "video"
+          }]
+        }
+      }))
       return res.data as SignedUrlResponse;
     },
     "Error uploading media",
@@ -87,20 +99,33 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   }),
 
   setActiveChat: axiosErrorHandler(async (chat) => {
-    if (chat) {
+    const state = get();
+    if (chat && !state.messages[chat.id]) {
       const state = get();
       const newMessages = state.messages;
       const res = await api.get(`/chat?id=${chat.id}`);
-      const data = res.data as Message[];
+      const data = (res.data as Message[]).reverse();
       newMessages[chat.id] = data;
       set({ messages: newMessages });
     }
     set({ activeChat: chat })
   }, "Error getting chats", ""),
 
-  addMessage: (chatId, message) => {
-    console.log("New message added", chatId, message)
-  },
+  addTextMessage: axiosErrorHandler(async (chatId, message) => {
+    await api.post("/chat/message/text", { chatId, data: message });
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [chatId]: [...state.messages[chatId], {
+          createdAt: new Date(),
+          id: "",
+          content: message,
+          senderId: state.user!.userId,
+          type: "text"
+        }]
+      }
+    }))
+  }, "Error sending message!", ""),
 
   addVideoRequest: (chatId, request) => {
     const message: Message = {
