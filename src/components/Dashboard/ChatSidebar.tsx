@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { MoreVertical } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useChatStore, Chat } from '../../stores/chatStore';
+import { useChatStore } from '../../stores/chatStore';
 import DeleteChatModal from '../Modals/DeleteChatModal';
+import { Chat } from '../../lib/chatStoreTypes';
 
 const ChatSidebar: React.FC = () => {
   const navigate = useNavigate();
-  const { chats, activeChat, setActiveChat } = useChatStore();
+  const chats = useChatStore(state => state.chats)
+  const { activeChat, setActiveChat } = useChatStore();
   const { user } = useChatStore();
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
 
   const handleChatClick = (chat: Chat) => {
-    setActiveChat(chat);
+    setActiveChat({ id: chat.id, editorName: chat.editorName, creatorName: chat.creatorName });
     navigate(`/dashboard?chat=${chat.id}`);
   };
 
@@ -46,7 +48,7 @@ const ChatSidebar: React.FC = () => {
               return (
                 <div
                   key={chat.id}
-                  className={`flex items-center p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${activeChat?.id === chat.id ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : ''
+                  className={`flex items-center group p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${activeChat?.id === chat.id ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : ''
                     }`}
                   onClick={() => handleChatClick(chat)}
                 >
@@ -61,17 +63,20 @@ const ChatSidebar: React.FC = () => {
                             {formatTime(chat.lastMessage.timestamp)}
                           </span>
                         )}
-                        <div className="relative group">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setChatToDelete(chat);
-                            }}
-                            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreVertical className="w-4 h-4 text-gray-400" />
-                          </button>
-                        </div>
+                        {
+                          user?.type.toLowerCase() === 'creator' &&
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setChatToDelete(chat);
+                              }}
+                              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="w-4 h-4 text-gray-400" />
+                            </button>
+                          </div>
+                        }
                       </div>
                     </div>
                     {chat.lastMessage && (

@@ -1,65 +1,28 @@
 import { create } from 'zustand';
+import { axiosErrorHandler } from '../lib/helpers';
+import { api } from '../lib/clients';
+import { ActiveChat, AddChatResponse, Chat, GetAllChatsResponse, Message, User, UserType, VideoRequest } from '../lib/chatStoreTypes';
 
-export interface VideoRequest {
-  id: string;
-  title: string;
-  description: string;
-  videoUrl: string;
-  thumbnailUrl: string;
-  status: 'pending' | 'approved' | 'changes-requested';
-  createdAt: Date;
-  createdBy: string;
-}
-
-export enum UserType {
-  CREATOR = "CREATOR",
-  EDITOR = "EDITOR"
-}
-
-export type User = {
-  userId: string,
-  username: string,
-  type: UserType
-}
-
-export interface Message {
-  id: string;
-  content: string;
-  senderId: string;
-  senderName: string;
-  timestamp: Date;
-  type: 'text' | 'image' | 'video' | 'video-request';
-  videoRequest?: VideoRequest;
-  mediaUrl?: string;
-}
-
-export interface Chat {
-  id: string;
-  creatorId: string;
-  editorId: string;
-  creatorName: string;
-  editorName: string;
-  messages: Message[];
-  lastMessage?: Message;
-}
-
-interface ChatStore {
+export interface ChatStore {
   user: User | null;
   chats: Chat[];
-  activeChat: Chat | null;
+  messages: Record<string, Message[]>,
+  activeChat: ActiveChat | null;
   setUserData: (username: string, userId: string, type: UserType) => void;
   setChats: (chats: Chat[]) => void;
-  addChat: (chat: Chat) => void;
+  addChat: (chatId: string) => Promise<void>;
+  getAllChats: () => Promise<void>;
   deleteChat: (chatId: string) => void;
-  setActiveChat: (chat: Chat | null) => void;
-  addMessage: (chatId: string, message: Message) => void;
+  setActiveChat: (chatId: ActiveChat | null) => void;
+  addMessage: (chat: ActiveChat, message: Message) => void;
   addVideoRequest: (chatId: string, request: VideoRequest) => void;
   updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
   updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
 }
 
-export const useChatStore = create<ChatStore>((set) => ({
+export const useChatStore = create<ChatStore>((set, get) => ({
   chats: [],
+  messages: {},
   user: null,
   setChats: (chats) => {
     set({ chats });
@@ -72,23 +35,59 @@ export const useChatStore = create<ChatStore>((set) => ({
     })
   },
   activeChat: null,
-  addChat: (chat) => set((state) => ({ chats: [...state.chats, chat] })),
-  deleteChat: (chatId) => set((state) => ({
-    chats: state.chats.filter(chat => chat.id !== chatId),
-    activeChat: state.activeChat?.id === chatId ? null : state.activeChat
-  })),
-  setActiveChat: (chat) => set({ activeChat: chat }),
-  addMessage: (chatId, message) => set((state) => ({
-    chats: state.chats.map(chat =>
-      chat.id === chatId
-        ? { ...chat, messages: [...chat.messages, message], lastMessage: message }
-        : chat
-    ),
-    activeChat: state.activeChat?.id === chatId
-      ? { ...state.activeChat, messages: [...state.activeChat.messages, message], lastMessage: message }
-      : state.activeChat
-  })),
-  addVideoRequest: (chatId, request) => set((state) => {
+  getAllChats: axiosErrorHandler(async () => {
+    const chats = await api.get("/chat/all");
+    const data = chats.data as GetAllChatsResponse;
+    set(
+      {
+        chats: [
+          ...data.map(d => ({
+            id: d.id,
+            creatorId: d.creator.id,
+            editorId: d.editor.id,
+            creatorName: d.creator.username,
+            editorName: d.editor.username
+          }))
+        ]
+      }
+    )
+  }, "Error getting chats", "") as () => Promise<void>,
+
+  addChat: axiosErrorHandler(async (editorId: string) => {
+    const response = await api.post("/chat", { editorId });
+    const data = response.data as AddChatResponse;
+    set((state) => ({
+      chats: [...state.chats, {
+        id: data.chatId,
+        editorId,
+        editorName: data.editorName,
+        creatorId: state.user!.userId,
+        creatorName: state.user!.username,
+        messages: []
+      }]
+    }))
+  }, "Error adding new chat.", "Chat created successfully!") as (editorId: string) => Promise<void>,
+
+  deleteChat: axiosErrorHandler(async (chatId) => {
+    await api.delete(`/chat?id=${chatId}`);
+    set((state) => ({
+      chats: state.chats.filter(chat => chat.id !== chatId),
+      activeChat: state.activeChat === chatId ? null : state.activeChat
+    }))
+  }),
+  setActiveChat: (chat) => {
+    if (chat) {
+      const state = get();
+      const newMessages = state.messages;
+      newMessages[chat.id] = [];
+      set({ messages: newMessages })
+    }
+    set({ activeChat: chat })
+  },
+  addMessage: (chatId, message) => {
+    console.log("New message added", chatId, message)
+  },
+  addVideoRequest: (chatId, request) => {
     const message: Message = {
       id: Date.now().toString(),
       content: `Video Request: ${request.title}`,
@@ -98,63 +97,12 @@ export const useChatStore = create<ChatStore>((set) => ({
       type: 'video-request',
       videoRequest: request
     };
-    return {
-      chats: state.chats.map(chat =>
-        chat.id === chatId
-          ? { ...chat, messages: [...chat.messages, message], lastMessage: message }
-          : chat
-      ),
-      activeChat: state.activeChat?.id === chatId
-        ? { ...state.activeChat, messages: [...state.activeChat.messages, message], lastMessage: message }
-        : state.activeChat
-    };
-  }),
-  updateVideoRequestStatus: (chatId, requestId, status) => set((state) => ({
-    chats: state.chats.map(chat =>
-      chat.id === chatId
-        ? {
-          ...chat,
-          messages: chat.messages.map(message =>
-            message.videoRequest?.id === requestId
-              ? { ...message, videoRequest: { ...message.videoRequest, status } }
-              : message
-          )
-        }
-        : chat
-    ),
-    activeChat: state.activeChat?.id === chatId
-      ? {
-        ...state.activeChat,
-        messages: state.activeChat.messages.map(message =>
-          message.videoRequest?.id === requestId
-            ? { ...message, videoRequest: { ...message.videoRequest, status } }
-            : message
-        )
-      }
-      : state.activeChat
-  })),
-  updateVideoRequest: (chatId, requestId, updates) => set((state) => ({
-    chats: state.chats.map(chat =>
-      chat.id === chatId
-        ? {
-          ...chat,
-          messages: chat.messages.map(message =>
-            message.videoRequest?.id === requestId
-              ? { ...message, videoRequest: { ...message.videoRequest, ...updates } }
-              : message
-          )
-        }
-        : chat
-    ),
-    activeChat: state.activeChat?.id === chatId
-      ? {
-        ...state.activeChat,
-        messages: state.activeChat.messages.map(message =>
-          message.videoRequest?.id === requestId
-            ? { ...message, videoRequest: { ...message.videoRequest, ...updates } }
-            : message
-        )
-      }
-      : state.activeChat
-  }))
+    console.log(message, chatId)
+  },
+  updateVideoRequestStatus: (chatId, requestId, status) => {
+    console.log(chatId, requestId, status);
+  },
+  updateVideoRequest: (chatId, requestId, updates) => {
+    console.log(chatId, requestId, updates);
+  }
 }));

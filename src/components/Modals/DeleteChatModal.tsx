@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
-import { useChatStore, Chat } from '../../stores/chatStore';
+import { useChatStore } from '../../stores/chatStore';
+import { Chat } from '../../lib/chatStoreTypes';
 
 interface DeleteChatModalProps {
   isOpen: boolean;
@@ -43,16 +44,16 @@ const DeleteChatModal: React.FC<DeleteChatModalProps> = ({ isOpen, chat, onClose
                 This action is irreversible
               </h4>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Deleting this chat will permanently remove all messages and cannot be recovered. 
-                However, any video uploads that have been made will remain as they are.
+                Deleting this chat will permanently remove all messages, photos, videos and cannot be recovered.
+                However, any youtube video uploads that have been made will remain as they are.
               </p>
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+              {/* <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
                   <strong>Important:</strong> Please inform the other user before making this change 
                   to prevent any unintended video conflicts in uploads to YouTube 
                   (e.g., creator clicks approve while editor is still changing the title).
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
 

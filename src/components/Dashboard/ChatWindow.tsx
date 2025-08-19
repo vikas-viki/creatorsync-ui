@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef } from 'react';
 import { Send, Paperclip, Play } from 'lucide-react';
-import { useChatStore, Message } from '../../stores/chatStore';
+import { useChatStore } from '../../stores/chatStore';
 import CreateVideoRequestModal from '../Modals/CreateVideoRequestModal';
 import VideoPreviewModal from '../Modals/VideoPreviewModal';
 import ApproveVideoModal from '../Modals/ApproveVideoModal';
+import { Message } from '../../lib/chatStoreTypes';
 
 const ChatWindow: React.FC = () => {
-  const { activeChat, addMessage } = useChatStore();
+  const { activeChat, addMessage, messages } = useChatStore();
   const { user } = useChatStore();
   const [messageText, setMessageText] = useState('');
   const [showCreateVideoRequest, setShowCreateVideoRequest] = useState(false);
@@ -29,7 +31,7 @@ const ChatWindow: React.FC = () => {
       type: 'text'
     };
 
-    addMessage(activeChat.id, newMessage);
+    addMessage(activeChat, newMessage);
     setMessageText('');
   };
 
@@ -59,7 +61,7 @@ const ChatWindow: React.FC = () => {
         mediaUrl
       };
 
-      addMessage(activeChat.id, newMessage);
+      addMessage(activeChat, newMessage);
     }
   };
 
@@ -105,7 +107,7 @@ const ChatWindow: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900">
-          {activeChat.messages.length === 0 ? (
+          {messages[activeChat.id].length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">
@@ -120,7 +122,7 @@ const ChatWindow: React.FC = () => {
               </div>
             </div>
           ) : (
-            activeChat.messages.map((message) => {
+            messages[activeChat.id].map((message) => {
               const isOwnMessage = message.senderId === user.userId;
 
               return (
@@ -230,7 +232,7 @@ const ChatWindow: React.FC = () => {
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type a message..."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-4 py-2 border outline-none border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 rows={1}
               />
             </div>

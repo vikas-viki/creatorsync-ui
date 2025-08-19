@@ -6,6 +6,7 @@ import FeedbackModal from '../Modals/FeedbackModal';
 import AddEditorModal from '../Modals/AddEditorModal';
 import ConnectYouTubeModal from '../Modals/ConnectYouTubeModal';
 import { useChatStore } from '../../stores/chatStore';
+import toast from 'react-hot-toast';
 
 const DashboardHeader: React.FC = () => {
   const { logout, youtubeConnected } = useAuthStore();
@@ -19,7 +20,7 @@ const DashboardHeader: React.FC = () => {
   const handleCopyEditorId = () => {
     if (user?.userId) {
       navigator.clipboard.writeText(user.userId);
-      // You could add a toast notification here
+      toast.success("Id copied successfully.");
     }
   };
 

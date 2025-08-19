@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { create } from 'zustand';
 import { api } from '../lib/clients';
 import { UserType } from '../lib/types';
-import { Chat, useChatStore } from './chatStore';
+import { useChatStore } from './chatStore';
 
 type AuthInput = {
   accessToken: string,
@@ -57,7 +57,6 @@ export const useAuthStore = create<AuthStore>()(
     session: async () => {
       try {
         const res = await api.get("/auth/session");
-        useChatStore.getState().setChats(res.data.chats as Chat[]);
         useChatStore.getState().setUserData(res.data.username, res.data.userId, res.data.type);
         set({ isAuthenticated: true });
         return true;

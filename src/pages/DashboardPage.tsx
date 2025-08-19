@@ -11,7 +11,7 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuthStore();
-  const { activeChat, setActiveChat, chats } = useChatStore();
+  const { activeChat, setActiveChat, chats, getAllChats } = useChatStore();
 
   const searchParams = new URLSearchParams(location.search);
   const chatId = searchParams.get('chat');
@@ -21,16 +21,20 @@ const DashboardPage: React.FC = () => {
       navigate('/auth');
       return;
     }
-
     if (chatId) {
       const chat = chats.find(c => c.id === chatId);
       if (chat) {
-        setActiveChat(chat);
+        setActiveChat({ id: chat.id, editorName: chat.editorName, creatorName: chat.creatorName });
       }
     } else {
       setActiveChat(null);
     }
   }, [isAuthenticated, navigate, chatId, chats, setActiveChat]);
+
+  useEffect(() => {
+    if (isAuthenticated)
+      getAllChats();
+  }, [isAuthenticated])
 
   if (!isAuthenticated) {
     return null;

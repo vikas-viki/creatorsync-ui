@@ -15,17 +15,7 @@ const AddEditorModal: React.FC<AddEditorModalProps> = ({ isOpen, onClose }) => {
   const handleAddEditor = () => {
     if (!editorId.trim() || !user) return;
 
-    // Simulate adding an editor
-    const newChat = {
-      id: `chat_${Date.now()}`,
-      creatorId: user.userId,
-      editorId: editorId,
-      creatorName: user.username,
-      editorName: `Editor_${editorId}`, // In real app, fetch from server
-      messages: []
-    };
-
-    addChat(newChat);
+    addChat(editorId);
     setEditorId('');
     onClose();
   };
