@@ -6,9 +6,11 @@ import CreateVideoRequestModal from '../Modals/CreateVideoRequestModal';
 import VideoPreviewModal from '../Modals/VideoPreviewModal';
 import ApproveVideoModal from '../Modals/ApproveVideoModal';
 import { Message } from '../../lib/chatStoreTypes';
+import toast from 'react-hot-toast';
+import axios, { isAxiosError } from 'axios';
 
 const ChatWindow: React.FC = () => {
-  const { activeChat, addMessage, messages } = useChatStore();
+  const { activeChat, addMessage, messages, signedUrl } = useChatStore();
   const { user } = useChatStore();
   const [messageText, setMessageText] = useState('');
   const [showCreateVideoRequest, setShowCreateVideoRequest] = useState(false);
@@ -42,27 +44,43 @@ const ChatWindow: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = e.target.files?.[0];
+      console.log("getting url", file);
+      if (!file) return;
+      const isVideo = file.type.startsWith('video/');
+      const isImage = file.type.startsWith('image/');
 
-    const isVideo = file.type.startsWith('video/');
-    const isImage = file.type.startsWith('image/');
+      if (isVideo || isImage) {
+        if (file.size > 10000000) { // 10Mil
+          toast.error("Max file size is 10MB, create feature request for more!");
+          return;
+        }
 
-    if (isVideo || isImage) {
-      const mediaUrl = URL.createObjectURL(file);
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        content: `${isVideo ? 'Video' : 'Image'}: ${file.name}`,
-        senderId: user.userId,
-        senderName: user.username,
-        timestamp: new Date(),
-        type: isVideo ? 'video' : 'image',
-        mediaUrl
-      };
+        const formData = new FormData();
+        const data = await signedUrl(file.type, activeChat.id);
 
-      addMessage(activeChat, newMessage);
+        if (!data) return;
+
+        Object.entries(data.fields).forEach(([k, v]) => formData.append(k, v));
+        formData.append('file', file);
+        formData.append("Content-Type", file.type);
+
+        const res = await axios.post(data.url, formData);
+
+        console.log(res.data);
+        // addMessage(activeChat, newMessage);
+      }
+    } catch (e) {
+      if (isAxiosError(e)) {
+        toast.error(e.message);
+      } else {
+        toast.error("Error uploading media");
+      }
+      console.log(e);
     }
+    e.target.value = "";
   };
 
   const handleVideoRequestAction = (action: 'approve' | 'changes', request: any) => {
@@ -211,12 +229,20 @@ const ChatWindow: React.FC = () => {
 
         <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors"
-            >
-              <Paperclip className="w-5 h-5" />
-            </button>
+            <div className="relative inline-block group">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
+
+              <div className="absolute bottom-full w-[190px] left-1/2 text-center -translate-x-1/2 mb-2 px-3 py-1 group-hover:opacity-100 opacity-0 pointer-events-none group-hover:pointer-events-auto transition-all duration-200
+                        bg-gray-600 text-white text-sm rounded-md shadow-lg 
+                        animate-fade-in">
+                uploads will be auto sent, pick with caution.
+              </div>
+            </div>
 
             <input
               type="file"

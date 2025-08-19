@@ -63,3 +63,8 @@ export type ActiveChat = {
     creatorName: string,
     editorName: string
 }
+
+export type SignedUrlResponse = {
+    url: string,
+    fields: Record<string, string>
+}

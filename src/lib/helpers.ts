@@ -7,7 +7,7 @@ export function axiosErrorHandler<T extends (...args: any[]) => Promise<any>>(
     errorMessage = "Something went wrong!",
     successMessage = "Action successfully completed"
 ) {
-    return (async (...args: Parameters<T>): Promise<ReturnType<T> | undefined> => {
+    return (async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>> | undefined> => {
         try {
             const res = await fn(...args);
             if (successMessage.length > 0) {
@@ -20,7 +20,7 @@ export function axiosErrorHandler<T extends (...args: any[]) => Promise<any>>(
             } else {
                 toast.error(errorMessage);
             }
-            return undefined as Awaited<ReturnType<T>>;
+            return undefined;
         }
-    }) as (...args: Parameters<T>) => Promise<ReturnType<T> | undefined>;
+    }) as (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>> | undefined>;
 }

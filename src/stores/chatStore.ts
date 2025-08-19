@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { axiosErrorHandler } from '../lib/helpers';
 import { api } from '../lib/clients';
-import { ActiveChat, AddChatResponse, Chat, GetAllChatsResponse, Message, User, UserType, VideoRequest } from '../lib/chatStoreTypes';
+import { ActiveChat, AddChatResponse, Chat, GetAllChatsResponse, Message, SignedUrlResponse, User, UserType, VideoRequest } from '../lib/chatStoreTypes';
 
 export interface ChatStore {
   user: User | null;
@@ -12,6 +12,7 @@ export interface ChatStore {
   setChats: (chats: Chat[]) => void;
   addChat: (chatId: string) => Promise<void>;
   getAllChats: () => Promise<void>;
+  signedUrl: (contentType: string, chatId: string) => Promise<SignedUrlResponse | undefined>;
   deleteChat: (chatId: string) => void;
   setActiveChat: (chatId: ActiveChat | null) => void;
   addMessage: (chat: ActiveChat, message: Message) => void;
@@ -35,6 +36,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     })
   },
   activeChat: null,
+  signedUrl: axiosErrorHandler(
+    async (contentType: string, chatId: string) => {
+      const res = await api.post("/chat/signedUrl", { contentType, chatId });
+      return res.data as SignedUrlResponse;
+    },
+    "Error uploading media",
+    ""
+  ),
+
   getAllChats: axiosErrorHandler(async () => {
     const chats = await api.get("/chat/all");
     const data = chats.data as GetAllChatsResponse;
