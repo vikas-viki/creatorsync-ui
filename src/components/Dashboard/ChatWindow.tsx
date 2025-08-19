@@ -7,6 +7,7 @@ import VideoPreviewModal from '../Modals/VideoPreviewModal';
 import ApproveVideoModal from '../Modals/ApproveVideoModal';
 import toast from 'react-hot-toast';
 import axios, { isAxiosError } from 'axios';
+import { VideoRequestStatus } from '../../lib/chatStoreTypes';
 
 const ChatWindow: React.FC = () => {
   const { activeChat, addTextMessage, messages, mediaMessage } = useChatStore();
@@ -137,7 +138,7 @@ const ChatWindow: React.FC = () => {
                     ? 'bg-primary-600 text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
                     }`}>
-                    {message.type === 'video-request' && message.videoRequest ? (
+                    {message.type === 'video_request' && message.videoRequest ? (
                       <div className="space-y-3">
                         <div className="flex items-center space-x-2">
                           <Play className="w-5 h-5" />
@@ -159,7 +160,7 @@ const ChatWindow: React.FC = () => {
                             Preview
                           </button>
 
-                          {user.type.toLowerCase() === 'creator' && message.videoRequest.status === 'pending' && (
+                          {user.type.toLowerCase() === 'creator' && message.videoRequest.status === VideoRequestStatus.PENDING && (
                             <>
                               <button
                                 onClick={() => handleVideoRequestAction('approve', message.videoRequest)}
@@ -177,10 +178,10 @@ const ChatWindow: React.FC = () => {
                           )}
                         </div>
 
-                        {message.videoRequest.status !== 'pending' && (
-                          <div className={`text-sm font-medium ${message.videoRequest.status === 'approved' ? 'text-green-200' : 'text-yellow-200'
+                        {message.videoRequest.status !== VideoRequestStatus.PENDING && (
+                          <div className={`text-sm font-medium ${message.videoRequest.status === VideoRequestStatus.APPROVED ? 'text-green-200' : 'text-yellow-200'
                             }`}>
-                            {message.videoRequest.status === 'approved' ? '✅ Approved' : '⏳ Changes Requested'}
+                            {message.videoRequest.status === VideoRequestStatus.APPROVED ? '✅ Approved' : '⏳ Changes Requested'}
                           </div>
                         )}
                       </div>

@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { axiosErrorHandler } from '../lib/helpers';
 import { api } from '../lib/clients';
-import { ActiveChat, AddChatResponse, Chat, GetAllChatsResponse, Message, SignedUrlResponse, User, UserType, VideoRequest } from '../lib/chatStoreTypes';
+import { ActiveChat, AddChatResponse, Chat, GetAllChatsResponse, Message, SignedUrlResponse, User, UserType, VideoRequest, VideoRequestResponse } from '../lib/chatStoreTypes';
+import toast from 'react-hot-toast';
 
 export interface ChatStore {
   user: User | null;
@@ -16,9 +17,9 @@ export interface ChatStore {
   deleteChat: (chatId: string) => void;
   setActiveChat: (chatId: ActiveChat | null) => void;
   addTextMessage: (chatId: string, message: string) => Promise<void>;
-  addVideoRequest: (chatId: string, request: VideoRequest) => void;
-  updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
-  updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
+  addVideoRequest: (chatId: string, request: VideoRequest) => Promise<VideoRequestResponse | undefined>;
+  // updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
+  // updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -127,23 +128,43 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }))
   }, "Error sending message!", ""),
 
-  addVideoRequest: (chatId, request) => {
+  addVideoRequest: axiosErrorHandler(async (chatId, request) => {
+    const state = get();
+
     const message: Message = {
       id: Date.now().toString(),
       content: `Video Request: ${request.title}`,
-      senderId: request.createdBy,
+      senderId: state.user!.userId,
       createdAt: new Date(),
-      type: 'video-request',
+      type: 'video_request',
       videoRequest: request
     };
-    console.log(message, chatId)
-  },
 
-  updateVideoRequestStatus: (chatId, requestId, status) => {
-    console.log(chatId, requestId, status);
-  },
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [chatId]: [...state.messages[chatId], message]
+      }
+    }))
 
-  updateVideoRequest: (chatId, requestId, updates) => {
-    console.log(chatId, requestId, updates);
-  }
+    const resopnse = await api.post("/chat/message/videoRequest", {
+      title: request.title,
+      description: request.description,
+      chatId,
+      thumbnailType: request.thumbnailType,
+      videoType: request.videoType
+    });
+
+    const data = resopnse.data as VideoRequestResponse;
+    toast.loading("Uploading media files, please wait!");
+    return data;
+  }, "Couldn't create a video request, please try again!", ""),
+
+  // updateVideoRequestStatus: (chatId, requestId, status) => {
+  //   console.log(chatId, requestId, status);
+  // },
+
+  // updateVideoRequest: (chatId, requestId, updates) => {
+  //   console.log(chatId, requestId, updates);
+  // }
 }));

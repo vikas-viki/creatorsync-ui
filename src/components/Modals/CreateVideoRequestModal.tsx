@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, Video } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
+import { VideoRequestResponse, VideoRequestStatus } from '../../lib/chatStoreTypes';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 interface CreateVideoRequestModalProps {
   isOpen: boolean;
@@ -13,26 +16,50 @@ const CreateVideoRequestModal: React.FC<CreateVideoRequestModalProps> = ({ isOpe
   const [description, setDescription] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const { addVideoRequest } = useChatStore();
+  const { addVideoRequest, activeChat } = useChatStore();
   const { user } = useChatStore();
   const videoInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = () => {
-    if (!title.trim() || !description.trim() || !videoFile || !user) return;
+  const handleSubmit = async () => {
+    if (!title.trim() || !description.trim() || !videoFile || !activeChat || !user || !thumbnailFile) return;
 
+    const thumbnailUrl = URL.createObjectURL(thumbnailFile);
+    const videoUrl = URL.createObjectURL(videoFile);
     const videoRequest = {
-      id: `vr_${Date.now()}`,
       title,
       description,
-      videoUrl: URL.createObjectURL(videoFile),
-      thumbnailUrl: thumbnailFile ? URL.createObjectURL(thumbnailFile) : '',
-      status: 'pending' as const,
-      createdAt: new Date(),
-      createdBy: user.userId
+      videoUrl,
+      thumbnailUrl,
+      chatId: activeChat!.id,
+      thumbnailType: thumbnailFile!.type,
+      videoType: videoFile.type,
+      status: VideoRequestStatus.PENDING,
+      createdAt: new Date()
     };
 
-    addVideoRequest(chatId, videoRequest);
+    const data: VideoRequestResponse | undefined = await addVideoRequest(chatId, videoRequest);
+    if (data) {
+      // for thumbnail
+      const thumbnailFormData = new FormData();
+
+      Object.entries(data.thumbnailSignedUrl.fields).forEach(([k, v]) => thumbnailFormData.append(k, v));
+      thumbnailFormData.append('file', thumbnailFile);
+      thumbnailFormData.append("Content-Type", thumbnailFile.type);
+
+      await axios.post(data.thumbnailSignedUrl.url, thumbnailFormData);
+
+      // for video file
+      const videoFormData = new FormData();
+
+      Object.entries(data.videoSignedUrl.fields).forEach(([k, v]) => videoFormData.append(k, v));
+      videoFormData.append('file', videoFile);
+      videoFormData.append("Content-Type", videoFile.type);
+
+      await axios.post(data.videoSignedUrl.url, videoFormData);
+
+      toast.success("Video request creation successful!");
+    }
 
     // Reset form
     setTitle('');

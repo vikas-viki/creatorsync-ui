@@ -1,13 +1,19 @@
+export enum VideoRequestStatus {
+    APPROVED = "APPROVED",
+    PENDING = "PENDING",
+    CHANGES_REQUESTED = "CHANGES_REQUESTED"
+}
 
 export interface VideoRequest {
-    id: string;
     title: string;
     description: string;
-    videoUrl: string;
+    chatId: string;
+    thumbnailType: string;
+    videoType: string;
     thumbnailUrl: string;
-    status: 'pending' | 'approved' | 'changes-requested';
-    createdAt: Date;
-    createdBy: string;
+    videoUrl: string;
+    status: VideoRequestStatus,
+    createdAt: Date
 }
 
 export enum UserType {
@@ -21,14 +27,23 @@ export type User = {
     type: UserType
 }
 
+export type VideoRequestData = {
+    title: string,
+    description: string,
+    thumbnail: string,
+    video: string,
+    versions: number
+    status: VideoRequestStatus;
+    createdAt: Date
+}
+
 export interface Message {
     id: string;
     content: string;
     senderId: string;
     createdAt: Date;
-    type: 'text' | 'image' | 'video' | 'video-request';
-    videoRequest?: VideoRequest;
-    mediaUrl?: string;
+    type: 'text' | 'image' | 'video' | 'video_request';
+    videoRequest?: VideoRequestData;
 }
 
 export interface Chat {
@@ -67,3 +82,5 @@ export type SignedUrlResponse = {
     url: string,
     fields: Record<string, string>
 }
+
+export type VideoRequestResponse = { thumbnailSignedUrl: SignedUrlResponse, videoSignedUrl: SignedUrlResponse }
