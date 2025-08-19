@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import axios, { isAxiosError } from 'axios';
 
 const ChatWindow: React.FC = () => {
-  const { activeChat, addMessage, messages, signedUrl } = useChatStore();
+  const { activeChat, addMessage, messages, mediaMessage } = useChatStore();
   const { user } = useChatStore();
   const [messageText, setMessageText] = useState('');
   const [showCreateVideoRequest, setShowCreateVideoRequest] = useState(false);
@@ -28,8 +28,7 @@ const ChatWindow: React.FC = () => {
       id: Date.now().toString(),
       content: messageText,
       senderId: user.userId,
-      senderName: user.username,
-      timestamp: new Date(),
+      createdAt: new Date(),
       type: 'text'
     };
 
@@ -59,7 +58,7 @@ const ChatWindow: React.FC = () => {
         }
 
         const formData = new FormData();
-        const data = await signedUrl(file.type, activeChat.id);
+        const data = await mediaMessage(file.type, activeChat.id);
 
         if (!data) return;
 
@@ -200,25 +199,24 @@ const ChatWindow: React.FC = () => {
                       <div>
                         {message.type === 'image' ? (
                           <img
-                            src={message.mediaUrl}
+                            src={message.content}
                             alt="Uploaded"
                             className="max-w-full h-auto rounded"
                           />
                         ) : (
                           <video
-                            src={message.mediaUrl}
+                            src={message.content}
                             controls
                             className="max-w-full h-auto rounded"
                           />
                         )}
-                        <p className="text-sm mt-2 opacity-90">{message.content}</p>
                       </div>
                     ) : (
                       <p>{message.content}</p>
                     )}
 
                     <p className={`text-xs mt-1 ${isOwnMessage ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
-                      {formatTime(message.timestamp)}
+                      {formatTime(message.createdAt)}
                     </p>
                   </div>
                 </div>

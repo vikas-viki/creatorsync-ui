@@ -12,7 +12,7 @@ export interface ChatStore {
   setChats: (chats: Chat[]) => void;
   addChat: (chatId: string) => Promise<void>;
   getAllChats: () => Promise<void>;
-  signedUrl: (contentType: string, chatId: string) => Promise<SignedUrlResponse | undefined>;
+  mediaMessage: (contentType: string, chatId: string) => Promise<SignedUrlResponse | undefined>;
   deleteChat: (chatId: string) => void;
   setActiveChat: (chatId: ActiveChat | null) => void;
   addMessage: (chat: ActiveChat, message: Message) => void;
@@ -36,9 +36,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     })
   },
   activeChat: null,
-  signedUrl: axiosErrorHandler(
+  mediaMessage: axiosErrorHandler(
     async (contentType: string, chatId: string) => {
-      const res = await api.post("/chat/signedUrl", { contentType, chatId });
+      const res = await api.post("/chat/message/media", { contentType, chatId });
       return res.data as SignedUrlResponse;
     },
     "Error uploading media",
@@ -85,33 +85,39 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       activeChat: state.activeChat === chatId ? null : state.activeChat
     }))
   }),
-  setActiveChat: (chat) => {
+
+  setActiveChat: axiosErrorHandler(async (chat) => {
     if (chat) {
       const state = get();
       const newMessages = state.messages;
-      newMessages[chat.id] = [];
-      set({ messages: newMessages })
+      const res = await api.get(`/chat?id=${chat.id}`);
+      const data = res.data as Message[];
+      newMessages[chat.id] = data;
+      set({ messages: newMessages });
     }
     set({ activeChat: chat })
-  },
+  }, "Error getting chats", ""),
+
   addMessage: (chatId, message) => {
     console.log("New message added", chatId, message)
   },
+
   addVideoRequest: (chatId, request) => {
     const message: Message = {
       id: Date.now().toString(),
       content: `Video Request: ${request.title}`,
       senderId: request.createdBy,
-      senderName: '',
-      timestamp: new Date(),
+      createdAt: new Date(),
       type: 'video-request',
       videoRequest: request
     };
     console.log(message, chatId)
   },
+
   updateVideoRequestStatus: (chatId, requestId, status) => {
     console.log(chatId, requestId, status);
   },
+
   updateVideoRequest: (chatId, requestId, updates) => {
     console.log(chatId, requestId, updates);
   }
