@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { X, Send } from 'lucide-react';
+import { isAxiosError } from 'axios';
+import toast from 'react-hot-toast';
+import { api } from '../../lib/clients';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -10,8 +13,17 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
   const [feedback, setFeedback] = useState('');
   const [type, setType] = useState<'feedback' | 'feature'>('feedback');
 
-  const handleSubmit = () => {
-    console.log('Feedback submitted:', { type, feedback });
+  const handleSubmit = async () => {
+    try {
+      await api.post(`/feedback?type=${type}`, { feedback });
+      toast.success("Thankyou for joining hands improving CreatorSync");
+    } catch (e) {
+      if (isAxiosError(e)) {
+        toast.error(e.response?.data.message || e.message);
+      } else {
+        toast.error(`Couldn't give ${type}`);
+      }
+    }
     setFeedback('');
     onClose();
   };
@@ -41,21 +53,19 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
             <div className="flex space-x-3">
               <button
                 onClick={() => setType('feedback')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  type === 'feedback'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${type === 'feedback'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
               >
                 Feedback
               </button>
               <button
                 onClick={() => setType('feature')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  type === 'feature'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${type === 'feature'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
               >
                 Feature Request
               </button>
