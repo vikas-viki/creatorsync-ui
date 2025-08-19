@@ -16,7 +16,7 @@ function App() {
   const getSession = async () => {
     const res = await session();
     if (res) {
-      navigate('/dashboard');
+      await navigate('/dashboard');
     }
   }
 

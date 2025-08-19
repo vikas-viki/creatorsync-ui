@@ -11,6 +11,17 @@ export interface VideoRequest {
   createdBy: string;
 }
 
+export enum UserType {
+  CREATOR = "CREATOR",
+  EDITOR = "EDITOR"
+}
+
+export type User = {
+  userId: string,
+  username: string,
+  type: UserType
+}
+
 export interface Message {
   id: string;
   content: string;
@@ -33,8 +44,11 @@ export interface Chat {
 }
 
 interface ChatStore {
+  user: User | null;
   chats: Chat[];
   activeChat: Chat | null;
+  setUserData: (username: string, userId: string, type: UserType) => void;
+  setChats: (chats: Chat[]) => void;
   addChat: (chat: Chat) => void;
   deleteChat: (chatId: string) => void;
   setActiveChat: (chat: Chat | null) => void;
@@ -46,6 +60,17 @@ interface ChatStore {
 
 export const useChatStore = create<ChatStore>((set) => ({
   chats: [],
+  user: null,
+  setChats: (chats) => {
+    set({ chats });
+  },
+  setUserData: (username, userId, type) => {
+    set({
+      user: {
+        userId, username, type
+      }
+    })
+  },
   activeChat: null,
   addChat: (chat) => set((state) => ({ chats: [...state.chats, chat] })),
   deleteChat: (chatId) => set((state) => ({
@@ -88,48 +113,48 @@ export const useChatStore = create<ChatStore>((set) => ({
     chats: state.chats.map(chat =>
       chat.id === chatId
         ? {
-            ...chat,
-            messages: chat.messages.map(message =>
-              message.videoRequest?.id === requestId
-                ? { ...message, videoRequest: { ...message.videoRequest, status } }
-                : message
-            )
-          }
-        : chat
-    ),
-    activeChat: state.activeChat?.id === chatId
-      ? {
-          ...state.activeChat,
-          messages: state.activeChat.messages.map(message =>
+          ...chat,
+          messages: chat.messages.map(message =>
             message.videoRequest?.id === requestId
               ? { ...message, videoRequest: { ...message.videoRequest, status } }
               : message
           )
         }
+        : chat
+    ),
+    activeChat: state.activeChat?.id === chatId
+      ? {
+        ...state.activeChat,
+        messages: state.activeChat.messages.map(message =>
+          message.videoRequest?.id === requestId
+            ? { ...message, videoRequest: { ...message.videoRequest, status } }
+            : message
+        )
+      }
       : state.activeChat
   })),
   updateVideoRequest: (chatId, requestId, updates) => set((state) => ({
     chats: state.chats.map(chat =>
       chat.id === chatId
         ? {
-            ...chat,
-            messages: chat.messages.map(message =>
-              message.videoRequest?.id === requestId
-                ? { ...message, videoRequest: { ...message.videoRequest, ...updates } }
-                : message
-            )
-          }
-        : chat
-    ),
-    activeChat: state.activeChat?.id === chatId
-      ? {
-          ...state.activeChat,
-          messages: state.activeChat.messages.map(message =>
+          ...chat,
+          messages: chat.messages.map(message =>
             message.videoRequest?.id === requestId
               ? { ...message, videoRequest: { ...message.videoRequest, ...updates } }
               : message
           )
         }
+        : chat
+    ),
+    activeChat: state.activeChat?.id === chatId
+      ? {
+        ...state.activeChat,
+        messages: state.activeChat.messages.map(message =>
+          message.videoRequest?.id === requestId
+            ? { ...message, videoRequest: { ...message.videoRequest, ...updates } }
+            : message
+        )
+      }
       : state.activeChat
   }))
 }));

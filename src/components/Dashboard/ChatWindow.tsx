@@ -1,14 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { Send, Paperclip, Play, Edit, Check, X } from 'lucide-react';
+import { Send, Paperclip, Play } from 'lucide-react';
 import { useChatStore, Message } from '../../stores/chatStore';
-import { useAuthStore } from '../../stores/authStore';
 import CreateVideoRequestModal from '../Modals/CreateVideoRequestModal';
 import VideoPreviewModal from '../Modals/VideoPreviewModal';
 import ApproveVideoModal from '../Modals/ApproveVideoModal';
 
 const ChatWindow: React.FC = () => {
   const { activeChat, addMessage } = useChatStore();
-  const { user } = useAuthStore();
+  const { user } = useChatStore();
   const [messageText, setMessageText] = useState('');
   const [showCreateVideoRequest, setShowCreateVideoRequest] = useState(false);
   const [showVideoPreview, setShowVideoPreview] = useState(false);
@@ -24,8 +23,8 @@ const ChatWindow: React.FC = () => {
     const newMessage: Message = {
       id: Date.now().toString(),
       content: messageText,
-      senderId: user.id,
-      senderName: user.name,
+      senderId: user.userId,
+      senderName: user.username,
       timestamp: new Date(),
       type: 'text'
     };
@@ -53,8 +52,8 @@ const ChatWindow: React.FC = () => {
       const newMessage: Message = {
         id: Date.now().toString(),
         content: `${isVideo ? 'Video' : 'Image'}: ${file.name}`,
-        senderId: user.id,
-        senderName: user.name,
+        senderId: user.userId,
+        senderName: user.username,
         timestamp: new Date(),
         type: isVideo ? 'video' : 'image',
         mediaUrl
@@ -82,21 +81,20 @@ const ChatWindow: React.FC = () => {
     });
   };
 
-  const otherUserName = user.role === 'creator' ? activeChat.editorName : activeChat.creatorName;
+  const otherUserName = user.type.toLowerCase() === 'creator' ? activeChat.editorName : activeChat.creatorName;
 
   return (
     <>
       <div className="h-full flex flex-col">
-        {/* Chat Header */}
         <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-6">
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{otherUserName}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {user.role === 'creator' ? 'Video Editor' : 'Content Creator'}
+              {user.type.toLowerCase() === 'creator' ? 'Video Editor' : 'Content Creator'}
             </p>
           </div>
-          
-          {user.role === 'editor' && (
+
+          {user.type.toLowerCase() === 'editor' && (
             <button
               onClick={() => setShowCreateVideoRequest(true)}
               className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
@@ -106,7 +104,6 @@ const ChatWindow: React.FC = () => {
           )}
         </div>
 
-        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900">
           {activeChat.messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
@@ -115,7 +112,7 @@ const ChatWindow: React.FC = () => {
                   Start your conversation with {otherUserName}
                 </p>
                 <p className="text-gray-400 dark:text-gray-500 text-sm">
-                  {user.role === 'creator' 
+                  {user.type.toLowerCase() === 'creator'
                     ? 'Share your video requirements and approve submissions'
                     : 'Create video requests and collaborate on content'
                   }
@@ -124,15 +121,14 @@ const ChatWindow: React.FC = () => {
             </div>
           ) : (
             activeChat.messages.map((message) => {
-              const isOwnMessage = message.senderId === user.id;
-              
+              const isOwnMessage = message.senderId === user.userId;
+
               return (
                 <div key={message.id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                    isOwnMessage 
-                      ? 'bg-primary-600 text-white' 
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                  }`}>
+                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwnMessage
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                    }`}>
                     {message.type === 'video-request' && message.videoRequest ? (
                       <div className="space-y-3">
                         <div className="flex items-center space-x-2">
@@ -143,7 +139,7 @@ const ChatWindow: React.FC = () => {
                           <h4 className="font-semibold">{message.videoRequest.title}</h4>
                           <p className="text-sm opacity-90 mt-1">{message.videoRequest.description}</p>
                         </div>
-                        
+
                         <div className="flex space-x-2 pt-2">
                           <button
                             onClick={() => {
@@ -154,8 +150,8 @@ const ChatWindow: React.FC = () => {
                           >
                             Preview
                           </button>
-                          
-                          {user.role === 'creator' && message.videoRequest.status === 'pending' && (
+
+                          {user.type.toLowerCase() === 'creator' && message.videoRequest.status === 'pending' && (
                             <>
                               <button
                                 onClick={() => handleVideoRequestAction('approve', message.videoRequest)}
@@ -172,11 +168,10 @@ const ChatWindow: React.FC = () => {
                             </>
                           )}
                         </div>
-                        
+
                         {message.videoRequest.status !== 'pending' && (
-                          <div className={`text-sm font-medium ${
-                            message.videoRequest.status === 'approved' ? 'text-green-200' : 'text-yellow-200'
-                          }`}>
+                          <div className={`text-sm font-medium ${message.videoRequest.status === 'approved' ? 'text-green-200' : 'text-yellow-200'
+                            }`}>
                             {message.videoRequest.status === 'approved' ? '✅ Approved' : '⏳ Changes Requested'}
                           </div>
                         )}
@@ -184,15 +179,15 @@ const ChatWindow: React.FC = () => {
                     ) : message.type === 'image' || message.type === 'video' ? (
                       <div>
                         {message.type === 'image' ? (
-                          <img 
-                            src={message.mediaUrl} 
-                            alt="Uploaded" 
+                          <img
+                            src={message.mediaUrl}
+                            alt="Uploaded"
                             className="max-w-full h-auto rounded"
                           />
                         ) : (
-                          <video 
-                            src={message.mediaUrl} 
-                            controls 
+                          <video
+                            src={message.mediaUrl}
+                            controls
                             className="max-w-full h-auto rounded"
                           />
                         )}
@@ -201,7 +196,7 @@ const ChatWindow: React.FC = () => {
                     ) : (
                       <p>{message.content}</p>
                     )}
-                    
+
                     <p className={`text-xs mt-1 ${isOwnMessage ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
                       {formatTime(message.timestamp)}
                     </p>
@@ -212,7 +207,6 @@ const ChatWindow: React.FC = () => {
           )}
         </div>
 
-        {/* Message Input */}
         <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <button
@@ -221,7 +215,7 @@ const ChatWindow: React.FC = () => {
             >
               <Paperclip className="w-5 h-5" />
             </button>
-            
+
             <input
               type="file"
               ref={fileInputRef}
@@ -229,7 +223,7 @@ const ChatWindow: React.FC = () => {
               accept="image/*,video/*"
               className="hidden"
             />
-            
+
             <div className="flex-1">
               <textarea
                 value={messageText}
@@ -240,7 +234,7 @@ const ChatWindow: React.FC = () => {
                 rows={1}
               />
             </div>
-            
+
             <button
               onClick={handleSendMessage}
               disabled={!messageText.trim()}
@@ -252,19 +246,18 @@ const ChatWindow: React.FC = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      <CreateVideoRequestModal 
+      <CreateVideoRequestModal
         isOpen={showCreateVideoRequest}
         onClose={() => setShowCreateVideoRequest(false)}
         chatId={activeChat.id}
       />
-      
+
       <VideoPreviewModal
         isOpen={showVideoPreview}
         onClose={() => setShowVideoPreview(false)}
         videoRequest={selectedVideoRequest}
       />
-      
+
       <ApproveVideoModal
         isOpen={showApproveModal}
         onClose={() => setShowApproveModal(false)}

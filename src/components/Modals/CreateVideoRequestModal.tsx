@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, Video } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
-import { useAuthStore } from '../../stores/authStore';
 
 interface CreateVideoRequestModalProps {
   isOpen: boolean;
@@ -15,7 +14,7 @@ const CreateVideoRequestModal: React.FC<CreateVideoRequestModalProps> = ({ isOpe
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const { addVideoRequest } = useChatStore();
-  const { user } = useAuthStore();
+  const { user } = useChatStore();
   const videoInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
@@ -30,11 +29,11 @@ const CreateVideoRequestModal: React.FC<CreateVideoRequestModalProps> = ({ isOpe
       thumbnailUrl: thumbnailFile ? URL.createObjectURL(thumbnailFile) : '',
       status: 'pending' as const,
       createdAt: new Date(),
-      createdBy: user.id
+      createdBy: user.userId
     };
 
     addVideoRequest(chatId, videoRequest);
-    
+
     // Reset form
     setTitle('');
     setDescription('');
@@ -64,7 +63,7 @@ const CreateVideoRequestModal: React.FC<CreateVideoRequestModalProps> = ({ isOpe
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Important Note</h4>
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              Videos in the chat will be auto-deleted after 7 days of uploading. 
+              Videos in the chat will be auto-deleted after 7 days of uploading.
               The data you provide here will be used directly for YouTube video upload.
             </p>
           </div>
@@ -99,7 +98,7 @@ const CreateVideoRequestModal: React.FC<CreateVideoRequestModalProps> = ({ isOpe
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Video File *
             </label>
-            <div 
+            <div
               onClick={() => videoInputRef.current?.click()}
               className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-colors"
             >
@@ -132,15 +131,15 @@ const CreateVideoRequestModal: React.FC<CreateVideoRequestModalProps> = ({ isOpe
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Thumbnail (Optional)
             </label>
-            <div 
+            <div
               onClick={() => thumbnailInputRef.current?.click()}
               className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-colors"
             >
               {thumbnailFile ? (
                 <div className="space-y-2">
-                  <img 
-                    src={URL.createObjectURL(thumbnailFile)} 
-                    alt="Thumbnail preview" 
+                  <img
+                    src={URL.createObjectURL(thumbnailFile)}
+                    alt="Thumbnail preview"
                     className="w-24 h-16 object-cover mx-auto rounded"
                   />
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{thumbnailFile.name}</p>

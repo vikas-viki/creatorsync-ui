@@ -3,15 +3,7 @@ import toast from 'react-hot-toast';
 import { create } from 'zustand';
 import { api } from '../lib/clients';
 import { UserType } from '../lib/types';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'creator' | 'editor';
-  editorId?: string;
-  youtubeConnected?: boolean;
-}
+import { Chat, useChatStore } from './chatStore';
 
 type AuthInput = {
   accessToken: string,
@@ -19,22 +11,22 @@ type AuthInput = {
 }
 
 interface AuthStore {
-  user: User | null;
   isAuthenticated: boolean;
+  youtubeConnected: boolean;
   login: (data: AuthInput) => Promise<boolean>;
   signup: (data: AuthInput) => Promise<boolean>;
   logout: () => Promise<boolean>;
   session: () => Promise<boolean>;
-  connectYouTube: () => void;
+  // connectYouTube: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
   (set, get) => ({
-    user: null,
     isAuthenticated: false,
+    youtubeConnected: false,
     login: async (data) => {
       try {
-        await api.post("/auth/login", data);
+        await api.post("/auth/signin", data);
         await get().session();
         toast.success("Authentication successful!");
         return true;
@@ -64,8 +56,9 @@ export const useAuthStore = create<AuthStore>()(
     },
     session: async () => {
       try {
-        const data = await api.get("/auth/session");
-        console.log("session data: ", data);
+        const res = await api.get("/auth/session");
+        useChatStore.getState().setChats(res.data.chats as Chat[]);
+        useChatStore.getState().setUserData(res.data.username, res.data.userId, res.data.type);
         set({ isAuthenticated: true });
         return true;
       } catch { /* empty */ }
@@ -74,7 +67,7 @@ export const useAuthStore = create<AuthStore>()(
     logout: async () => {
       try {
         await api.get("/auth/logout");
-        set({ user: null, isAuthenticated: false })
+        set({ isAuthenticated: false })
         toast.success("Logout successful!");
         return true;
       } catch (e) {
@@ -87,8 +80,8 @@ export const useAuthStore = create<AuthStore>()(
       return false;
     }
     ,
-    connectYouTube: () => set((state) => ({
-      user: state.user ? { ...state.user, youtubeConnected: true } : null
-    })),
+    // connectYouTube: () => set((state) => ({
+    //   user: state.user ? { ...state.user, youtubeConnected: true } : null
+    // })),
   })
 );

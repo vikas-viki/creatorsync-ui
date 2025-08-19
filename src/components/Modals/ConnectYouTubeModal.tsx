@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Youtube } from 'lucide-react';
-import { useAuthStore } from '../../stores/authStore';
+// import { useAuthStore } from '../../stores/authStore';
 
 interface ConnectYouTubeModalProps {
   isOpen: boolean;
@@ -8,11 +8,11 @@ interface ConnectYouTubeModalProps {
 }
 
 const ConnectYouTubeModal: React.FC<ConnectYouTubeModalProps> = ({ isOpen, onClose }) => {
-  const { connectYouTube } = useAuthStore();
+  // const { connectYouTube } = useAuthStore();
 
   const handleConnect = () => {
     // Simulate YouTube connection
-    connectYouTube();
+    // connectYouTube();
     onClose();
   };
 

@@ -9,7 +9,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen font-poppins">
-      {/* Header */}
       <header className="relative z-10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -31,7 +30,6 @@ const HomePage: React.FC = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-6 pt-16 pb-24">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
@@ -41,7 +39,7 @@ const HomePage: React.FC = () => {
             </span>
           </h2>
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Seamlessly collaborate on YouTube videos with built-in approval workflows, 
+            Seamlessly collaborate on YouTube videos with built-in approval workflows,
             direct YouTube uploads, and transparent communication tools.
           </p>
           <button
@@ -53,7 +51,6 @@ const HomePage: React.FC = () => {
           </button>
         </div>
 
-        {/* Demo Video Section */}
         <div className="max-w-4xl mx-auto animate-slide-up">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
             <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
@@ -67,7 +64,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Features Section */}
         <div className="mt-32">
           <h3 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-16">
             Why Choose CreatorSync?

@@ -10,19 +10,18 @@ import WelcomeScreen from '../components/Dashboard/WelcomeScreen';
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { activeChat, setActiveChat, chats } = useChatStore();
 
   const searchParams = new URLSearchParams(location.search);
   const chatId = searchParams.get('chat');
 
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated) {
       navigate('/auth');
       return;
     }
 
-    // Set active chat based on URL parameter
     if (chatId) {
       const chat = chats.find(c => c.id === chatId);
       if (chat) {
@@ -31,16 +30,9 @@ const DashboardPage: React.FC = () => {
     } else {
       setActiveChat(null);
     }
-  }, [isAuthenticated, user, navigate, chatId, chats, setActiveChat]);
+  }, [isAuthenticated, navigate, chatId, chats, setActiveChat]);
 
-  useEffect(() => {
-    console.log("running!", isAuthenticated)
-    if (!isAuthenticated) {
-      navigate('/auth');
-    }
-  }, []);
-
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return null;
   }
 

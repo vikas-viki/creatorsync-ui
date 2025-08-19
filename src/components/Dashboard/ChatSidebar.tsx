@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore, Chat } from '../../stores/chatStore';
-import { useAuthStore } from '../../stores/authStore';
 import DeleteChatModal from '../Modals/DeleteChatModal';
 
 const ChatSidebar: React.FC = () => {
   const navigate = useNavigate();
   const { chats, activeChat, setActiveChat } = useChatStore();
-  const { user } = useAuthStore();
+  const { user } = useChatStore();
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
 
   const handleChatClick = (chat: Chat) => {
@@ -35,7 +34,7 @@ const ChatSidebar: React.FC = () => {
           {chats.length === 0 ? (
             <div className="p-6 text-center">
               <p className="text-gray-500 dark:text-gray-400">
-                {user?.role === 'creator' 
+                {user?.type.toLowerCase() === 'creator'
                   ? 'No editors connected yet. Click + to add an editor.'
                   : 'No chats available. Wait for creators to add you.'
                 }
@@ -43,13 +42,12 @@ const ChatSidebar: React.FC = () => {
             </div>
           ) : (
             chats.map((chat) => {
-              const otherUserName = user?.role === 'creator' ? chat.editorName : chat.creatorName;
+              const otherUserName = user?.type.toLowerCase() === 'creator' ? chat.editorName : chat.creatorName;
               return (
                 <div
                   key={chat.id}
-                  className={`flex items-center p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
-                    activeChat?.id === chat.id ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : ''
-                  }`}
+                  className={`flex items-center p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${activeChat?.id === chat.id ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : ''
+                    }`}
                   onClick={() => handleChatClick(chat)}
                 >
                   <div className="flex-1 min-w-0">
@@ -78,8 +76,8 @@ const ChatSidebar: React.FC = () => {
                     </div>
                     {chat.lastMessage && (
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
-                        {chat.lastMessage.type === 'video-request' 
-                          ? '📹 Video Request' 
+                        {chat.lastMessage.type === 'video-request'
+                          ? '📹 Video Request'
                           : chat.lastMessage.content
                         }
                       </p>
@@ -92,7 +90,7 @@ const ChatSidebar: React.FC = () => {
         </div>
       </div>
 
-      <DeleteChatModal 
+      <DeleteChatModal
         isOpen={!!chatToDelete}
         chat={chatToDelete}
         onClose={() => setChatToDelete(null)}

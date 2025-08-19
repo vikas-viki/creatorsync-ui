@@ -43,7 +43,6 @@ const AuthPage: React.FC = () => {
   return (
     <div className="min-h-screen font-poppins flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        {/* Back Button */}
         <button
           onClick={() => navigate('/')}
           className="flex items-center text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 mb-8 transition-colors"
@@ -52,7 +51,6 @@ const AuthPage: React.FC = () => {
           Back to Home
         </button>
 
-        {/* Auth Card */}
         <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -66,7 +64,6 @@ const AuthPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Role Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               I am a:
@@ -99,7 +96,6 @@ const AuthPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Google Auth Button */}
           <button
             onClick={() => HandleGoogleAuth()}
             className="w-full flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 font-medium transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-600"

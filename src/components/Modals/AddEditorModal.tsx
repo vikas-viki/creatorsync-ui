@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
-import { useAuthStore } from '../../stores/authStore';
 
 interface AddEditorModalProps {
   isOpen: boolean;
@@ -11,7 +10,7 @@ interface AddEditorModalProps {
 const AddEditorModal: React.FC<AddEditorModalProps> = ({ isOpen, onClose }) => {
   const [editorId, setEditorId] = useState('');
   const { addChat } = useChatStore();
-  const { user } = useAuthStore();
+  const { user } = useChatStore();
 
   const handleAddEditor = () => {
     if (!editorId.trim() || !user) return;
@@ -19,9 +18,9 @@ const AddEditorModal: React.FC<AddEditorModalProps> = ({ isOpen, onClose }) => {
     // Simulate adding an editor
     const newChat = {
       id: `chat_${Date.now()}`,
-      creatorId: user.id,
+      creatorId: user.userId,
       editorId: editorId,
-      creatorName: user.name,
+      creatorName: user.username,
       editorName: `Editor_${editorId}`, // In real app, fetch from server
       messages: []
     };
