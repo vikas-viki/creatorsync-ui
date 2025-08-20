@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { api } from '../lib/clients';
 import { UserType } from '../lib/types';
 import { useChatStore } from './chatStore';
+import { axiosErrorHandler } from '../lib/helpers';
 
 type AuthInput = {
   accessToken: string,
@@ -17,7 +18,7 @@ interface AuthStore {
   signup: (data: AuthInput) => Promise<boolean>;
   logout: () => Promise<boolean>;
   session: () => Promise<boolean>;
-  // connectYouTube: () => void;
+  connectYouTube: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -77,10 +78,9 @@ export const useAuthStore = create<AuthStore>()(
         }
       }
       return false;
-    }
-    ,
-    // connectYouTube: () => set((state) => ({
-    //   user: state.user ? { ...state.user, youtubeConnected: true } : null
-    // })),
+    },
+    connectYouTube: axiosErrorHandler(async () => {
+      await api.get("/auth/youtube");
+    }, "Couldn't connect youtube, please try again later!", ""),
   })
 );

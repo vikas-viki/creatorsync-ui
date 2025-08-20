@@ -134,12 +134,12 @@ const ChatWindow: React.FC = () => {
 
               return (
                 <div key={message.id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwnMessage
+                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.type == "video_request" && "bg-sky-300 text-black"} ${isOwnMessage
                     ? 'bg-primary-600 text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
                     }`}>
                     {message.type === 'video_request' && message.videoRequest ? (
-                      <div className="space-y-3">
+                      <div className="space-y-3 ">
                         <div className="flex items-center space-x-2">
                           <Play className="w-5 h-5" />
                           <span className="font-medium">Video Request</span>
@@ -155,7 +155,7 @@ const ChatWindow: React.FC = () => {
                               setSelectedVideoRequest(message.videoRequest);
                               setShowVideoPreview(true);
                             }}
-                            className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm font-medium transition-colors"
+                            className="px-3 py-1 bg-gray-500/20 hover:bg-white/30 rounded text-sm font-medium transition-colors"
                           >
                             Preview
                           </button>
@@ -167,12 +167,6 @@ const ChatWindow: React.FC = () => {
                                 className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors"
                               >
                                 Approve
-                              </button>
-                              <button
-                                onClick={() => handleVideoRequestAction('changes', message.videoRequest)}
-                                className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium transition-colors"
-                              >
-                                Request Changes
                               </button>
                             </>
                           )}

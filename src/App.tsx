@@ -35,7 +35,11 @@ function App() {
               <AuthPage />
             </GoogleOAuthProvider>
           } />
-          <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/auth" />} />
+          <Route path="/dashboard" element={isAuthenticated ?
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+              <DashboardPage />
+            </GoogleOAuthProvider>
+            : <Navigate to="/auth" />} />
         </Routes>
       </div>
     </div>

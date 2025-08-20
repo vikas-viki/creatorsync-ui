@@ -18,6 +18,7 @@ export interface ChatStore {
   setActiveChat: (chatId: ActiveChat | null) => void;
   addTextMessage: (chatId: string, message: string) => Promise<void>;
   addVideoRequest: (chatId: string, request: VideoRequest) => Promise<VideoRequestResponse | undefined>;
+  approveVideoRequest: (access_token: string, chatId: string, videoRequestId: string) => Promise<void>;
   // updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
   // updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
 }
@@ -159,6 +160,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     toast.loading("Uploading media files, please wait!");
     return data;
   }, "Couldn't create a video request, please try again!", ""),
+
+  approveVideoRequest: axiosErrorHandler(async (access_token: string, chatId: string, videoRequestId: string) => {
+    await api.post("/chat/approveVideoRequest", {
+      access_token,
+      chatId, videoRequestId
+    });
+  }, "Couldn't approve video request, please try again later", "Video upload started, will be live soon!")
 
   // updateVideoRequestStatus: (chatId, requestId, status) => {
   //   console.log(chatId, requestId, status);

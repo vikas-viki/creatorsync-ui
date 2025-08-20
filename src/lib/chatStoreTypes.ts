@@ -5,6 +5,7 @@ export enum VideoRequestStatus {
 }
 
 export interface VideoRequest {
+    id: string;
     title: string;
     description: string;
     chatId: string;
@@ -28,6 +29,7 @@ export type User = {
 }
 
 export type VideoRequestData = {
+    id: string
     title: string,
     description: string,
     thumbnail: string,

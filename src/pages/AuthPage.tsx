@@ -37,7 +37,8 @@ const AuthPage: React.FC = () => {
     onError: (errorResponse) => {
       console.log("error: ", errorResponse);
       toast.error(`Error ${mode}, try again!`);
-    }
+    },
+    scope: "profile email"
   });
 
   return (
