@@ -58,8 +58,8 @@ export const useAuthStore = create<AuthStore>()(
     session: async () => {
       try {
         const res = await api.get("/auth/session");
-        useChatStore.getState().setUserData(res.data.username, res.data.userId, res.data.type);
-        set({ isAuthenticated: true });
+        useChatStore.getState().setUserData(res.data.username, res.data.userId, res.data.type, res.data.isYoutubeConnected);
+        set({ isAuthenticated: true, youtubeConnected: res.data.isYoutubeConnected });
         return true;
       } catch { /* empty */ }
       return false;
@@ -80,7 +80,9 @@ export const useAuthStore = create<AuthStore>()(
       return false;
     },
     connectYouTube: axiosErrorHandler(async () => {
-      await api.get("/auth/youtube");
-    }, "Couldn't connect youtube, please try again later!", ""),
+      const res = await api.get("/auth/youtube");
+      const data = res.data as { url: string };
+      window.location.href = data.url;
+    }, "We couldn’t log you in right now. Please try again later.", ""),
   })
 );

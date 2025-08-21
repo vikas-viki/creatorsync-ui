@@ -25,7 +25,8 @@ export enum UserType {
 export type User = {
     userId: string,
     username: string,
-    type: UserType
+    type: UserType,
+    isYoutubeConnected: boolean
 }
 
 export type VideoRequestData = {

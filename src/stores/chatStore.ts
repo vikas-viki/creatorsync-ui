@@ -9,7 +9,7 @@ export interface ChatStore {
   chats: Chat[];
   messages: Record<string, Message[]>,
   activeChat: ActiveChat | null;
-  setUserData: (username: string, userId: string, type: UserType) => void;
+  setUserData: (username: string, userId: string, type: UserType, isYoutubeConnected: boolean) => void;
   setChats: (chats: Chat[]) => void;
   addChat: (chatId: string) => Promise<void>;
   getAllChats: () => Promise<void>;
@@ -18,7 +18,7 @@ export interface ChatStore {
   setActiveChat: (chatId: ActiveChat | null) => void;
   addTextMessage: (chatId: string, message: string) => Promise<void>;
   addVideoRequest: (chatId: string, request: VideoRequest) => Promise<VideoRequestResponse | undefined>;
-  approveVideoRequest: (access_token: string, chatId: string, videoRequestId: string) => Promise<void>;
+  approveVideoRequest: (chatId: string, videoRequestId: string) => Promise<void>;
   // updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
   // updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
 }
@@ -30,10 +30,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setChats: (chats) => {
     set({ chats });
   },
-  setUserData: (username, userId, type) => {
+  setUserData: (username, userId, type, isYoutubeConnected) => {
     set({
       user: {
-        userId, username, type
+        userId, username, type, isYoutubeConnected
       }
     })
   },
@@ -161,9 +161,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     return data;
   }, "Couldn't create a video request, please try again!", ""),
 
-  approveVideoRequest: axiosErrorHandler(async (access_token: string, chatId: string, videoRequestId: string) => {
+  approveVideoRequest: axiosErrorHandler(async (chatId: string, videoRequestId: string) => {
     await api.post("/chat/approveVideoRequest", {
-      access_token,
       chatId, videoRequestId
     });
   }, "Couldn't approve video request, please try again later", "Video upload started, will be live soon!")

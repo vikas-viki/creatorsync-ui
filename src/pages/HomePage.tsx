@@ -32,13 +32,13 @@ const HomePage: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-6 pt-16 pb-24">
         <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+          <h2 className="text-5xl md:text-6xl font-bold mt-5 text-gray-900 dark:text-white mb-6 leading-tight">
             Bridge the Trust Gap Between
-            <span className="text-primary-600 dark:text-primary-400 block">
+            <span className="text-primary-600 dark:text-primary-400 block mt-2">
               Creators & Editors
             </span>
           </h2>
-          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-md md:text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
             Seamlessly collaborate on YouTube videos with built-in approval workflows,
             direct YouTube uploads, and transparent communication tools.
           </p>

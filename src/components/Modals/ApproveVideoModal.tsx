@@ -1,9 +1,7 @@
-import React from 'react';
-import { X, Youtube, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Youtube, Check, Loader2 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { VideoRequestData } from '../../lib/chatStoreTypes';
-import { useGoogleLogin } from '@react-oauth/google';
-import toast from 'react-hot-toast';
 
 interface ApproveVideoModalProps {
   isOpen: boolean;
@@ -14,22 +12,16 @@ interface ApproveVideoModalProps {
 
 const ApproveVideoModal: React.FC<ApproveVideoModalProps> = ({ isOpen, onClose, videoRequest, chatId }) => {
   const { approveVideoRequest } = useChatStore();
-  const handleApprove = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      if (videoRequest) {
-        console.log({ tokenResponse });
-        await approveVideoRequest(tokenResponse.access_token, chatId, videoRequest.id);
-      }
+  const [loading, setLoading] = useState(false);
+
+  const handleApprove = async () => {
+    setLoading(true);
+    if (videoRequest) {
+      await approveVideoRequest(chatId, videoRequest.id);
       onClose();
-    },
-    onError: (errorResponse) => {
-      console.log("error: ", errorResponse);
-      toast.error("Error authenticating youtube.");
-      onClose();
-    },
-    scope: "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube",
-    prompt: "consent"
-  });
+    }
+    setLoading(false);
+  }
 
 
   if (!isOpen || !videoRequest) return null;
@@ -82,16 +74,6 @@ const ApproveVideoModal: React.FC<ApproveVideoModalProps> = ({ isOpen, onClose, 
               This action cannot be undone once the upload begins.
             </p>
           </div>
-          <div className="bg-rose-50  dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <Check className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-              <p className="text-sm text-rose-800 dark:text-rose-200 font-medium">
-                For security purposes, CreatorSync does not retain your access credentials. Each time you approve a video request, you will be prompted to grant permission to upload the video, and your credentials are discarded immediately afterward.
-              </p>
-            </div>
-
-          </div>
-
           <div className="flex justify-end space-x-3 pt-4">
             <button
               onClick={onClose}
@@ -101,12 +83,21 @@ const ApproveVideoModal: React.FC<ApproveVideoModalProps> = ({ isOpen, onClose, 
             </button>
             <button
               onClick={() => {
-                handleApprove();
+                if (!loading)
+                  handleApprove();
               }}
               className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
             >
-              <Check className="w-4 h-4" />
-              <span>Approve & Upload</span>
+              {
+                loading == false ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Approve & Upload</span>
+                  </>
+                ) : (
+                  <Loader2 className='animate-spin' />
+                )
+              }
             </button>
           </div>
         </div>

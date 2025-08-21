@@ -1,7 +1,6 @@
 import React from 'react';
 import { X, Youtube } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
-import { useGoogleLogin } from '@react-oauth/google';
 
 interface ConnectYouTubeModalProps {
   isOpen: boolean;
@@ -9,24 +8,10 @@ interface ConnectYouTubeModalProps {
 }
 
 const ConnectYouTubeModal: React.FC<ConnectYouTubeModalProps> = ({ isOpen, onClose }) => {
-  // const { connectYouTube } = useAuthStore();
-
-  const HandleGoogleYouTubeAuth = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-
-      console.log("YouTube access token:", tokenResponse.access_token);
-    },
-    onError: (errorResponse) => {
-      console.log("error: ", errorResponse);
-    },
-    scope: "https://www.googleapis.com/auth/youtube.upload",
-    prompt: "consent"
-  });
-
+  const { connectYouTube } = useAuthStore();
 
   const handleConnect = async () => {
-    // await connectYouTube();
-    HandleGoogleYouTubeAuth()
+    await connectYouTube();
     onClose();
   };
 

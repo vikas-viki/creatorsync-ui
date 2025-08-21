@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, Plus, Settings, Sun, Moon, User, Copy, LogOut } from 'lucide-react';
+import { MessageCircle, Plus, Settings, Sun, Moon, User, Copy, LogOut, Check } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
 import FeedbackModal from '../Modals/FeedbackModal';
@@ -83,16 +83,22 @@ const DashboardHeader: React.FC = () => {
                   </button>
                 )}
 
-                {user?.type.toLowerCase() === 'creator' && !youtubeConnected && (
+                {user?.type.toLowerCase() === 'creator' && (
                   <button
                     onClick={() => {
-                      setShowConnectYouTubeModal(true);
-                      setShowProfileMenu(false);
+                      if (!youtubeConnected) {
+                        setShowConnectYouTubeModal(true);
+                        setShowProfileMenu(false);
+                      }
                     }}
                     className="w-full flex items-center px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                   >
-                    <Settings className="w-4 h-4 mr-3" />
-                    Connect YouTube
+                    {youtubeConnected ? (
+                      <Check className="w-4 h-4 mr-3 stroke-green-600" />
+                    ) : (
+                      <Settings className="w-4 h-4 mr-3" />
+                    )}
+                    {youtubeConnected ? "Youtube connected" : "Connect YouTube"}
                   </button>
                 )}
 
