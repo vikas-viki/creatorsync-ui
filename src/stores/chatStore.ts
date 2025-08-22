@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { axiosErrorHandler } from '../lib/helpers';
 import { api } from '../lib/clients';
-import { ActiveChat, AddChatResponse, Chat, GetAllChatsResponse, Message, SignedUrlResponse, User, UserType, VideoRequest, VideoRequestResponse } from '../lib/chatStoreTypes';
+import { ActiveChat, AddChatResponse, Chat, GetAllChatsResponse, Message, SignedUrlResponse, User, UserType, VideoRequest, VideoRequestResponse, VideoRequestStatus } from '../lib/chatStoreTypes';
 import toast from 'react-hot-toast';
 
 export interface ChatStore {
@@ -157,7 +157,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
 
     const data = resopnse.data as VideoRequestResponse;
-    toast.loading("Uploading media files, please wait!");
+    toast.loading("Uploading media files, please wait!", { duration: 1000 });
     return data;
   }, "Couldn't create a video request, please try again!", ""),
 
@@ -165,6 +165,23 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     await api.post("/chat/approveVideoRequest", {
       chatId, videoRequestId
     });
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [chatId]: state.messages[chatId].map((m) =>
+          m.videoRequest && m.videoRequest.id === videoRequestId
+            ? {
+              ...m,
+              videoRequest: {
+                ...m.videoRequest,
+                status: VideoRequestStatus.APPROVED,
+              },
+            }
+            : m
+        ),
+      },
+    }));
+
   }, "Couldn't approve video request, please try again later", "Video upload started, will be live soon!")
 
   // updateVideoRequestStatus: (chatId, requestId, status) => {

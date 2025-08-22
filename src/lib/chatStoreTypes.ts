@@ -29,6 +29,13 @@ export type User = {
     isYoutubeConnected: boolean
 }
 
+export enum VideoUploadStatus {
+    NOT_APPROVED = "NOT_APPROVED",
+    UPLOAD_STARTED = "UPLOAD_STARTED",
+    VIDEO_UPLOADED = "VIDEO_UPLOADED",
+    THUMBNAIL_UPDATED = "THUMBNAIL_UPDATED",
+}
+
 export type VideoRequestData = {
     id: string
     title: string,
@@ -37,7 +44,8 @@ export type VideoRequestData = {
     video: string,
     versions: number
     status: VideoRequestStatus;
-    createdAt: Date
+    createdAt: Date;
+    uploadStatus: VideoUploadStatus
 }
 
 export interface Message {

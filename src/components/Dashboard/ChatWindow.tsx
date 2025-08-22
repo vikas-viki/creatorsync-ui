@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef } from 'react';
-import { Send, Paperclip, Play } from 'lucide-react';
+import { Send, Paperclip, Play, BarChart3 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import CreateVideoRequestModal from '../Modals/CreateVideoRequestModal';
 import VideoPreviewModal from '../Modals/VideoPreviewModal';
@@ -8,6 +8,7 @@ import ApproveVideoModal from '../Modals/ApproveVideoModal';
 import toast from 'react-hot-toast';
 import axios, { isAxiosError } from 'axios';
 import { VideoRequestStatus } from '../../lib/chatStoreTypes';
+import VideoUploadProgressModal from '../Modals/VideoUploadProgressModal';
 
 const ChatWindow: React.FC = () => {
   const { activeChat, addTextMessage, messages, mediaMessage } = useChatStore();
@@ -16,6 +17,7 @@ const ChatWindow: React.FC = () => {
   const [showCreateVideoRequest, setShowCreateVideoRequest] = useState(false);
   const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedVideoRequest, setSelectedVideoRequest] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -160,6 +162,19 @@ const ChatWindow: React.FC = () => {
                             Preview
                           </button>
 
+                          {message.videoRequest.status === "APPROVED" && (
+                            <button
+                              onClick={() => {
+                                setSelectedVideoRequest(message.videoRequest);
+                                setShowProgressModal(true);
+                              }}
+                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors flex items-center space-x-1"
+                            >
+                              <BarChart3 className="w-3 h-3" />
+                              <span>Progress</span>
+                            </button>
+                          )}
+
                           {user.type.toLowerCase() === 'creator' && message.videoRequest.status === VideoRequestStatus.PENDING && (
                             <>
                               <button
@@ -273,6 +288,15 @@ const ChatWindow: React.FC = () => {
         onClose={() => setShowApproveModal(false)}
         videoRequest={selectedVideoRequest}
         chatId={activeChat.id}
+      />
+
+
+
+      <VideoUploadProgressModal
+        isOpen={showProgressModal}
+        onClose={() => setShowProgressModal(false)}
+        videoRequest={selectedVideoRequest}
+        videoTitle={selectedVideoRequest?.title || ''}
       />
     </>
   );
