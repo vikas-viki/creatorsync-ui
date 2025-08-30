@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Calendar, User } from 'lucide-react';
-import { VideoRequestData, VideoRequestStatus } from '../../lib/chatStoreTypes';
+import { VideoRequestData } from '../../lib/chatStoreTypes';
 
 interface VideoPreviewModalProps {
   isOpen: boolean;
@@ -50,15 +50,6 @@ const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({ isOpen, onClose, 
                 <div className="flex items-center space-x-1">
                   <User className="w-4 h-4" />
                   <span>Created by Editor</span>
-                </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${videoRequest.status === VideoRequestStatus.APPROVED
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                  : videoRequest.status === VideoRequestStatus.CHANGES_REQUESTED
-                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                  }`}>
-                  {videoRequest.status === VideoRequestStatus.APPROVED ? 'Approved' :
-                    videoRequest.status === VideoRequestStatus.CHANGES_REQUESTED ? 'Changes Requested' : 'Pending Review'}
                 </div>
               </div>
             </div>

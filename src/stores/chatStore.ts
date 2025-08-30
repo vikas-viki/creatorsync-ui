@@ -19,6 +19,7 @@ export interface ChatStore {
   addTextMessage: (chatId: string, message: string) => Promise<void>;
   addVideoRequest: (chatId: string, request: VideoRequest) => Promise<VideoRequestResponse | undefined>;
   approveVideoRequest: (chatId: string, videoRequestId: string) => Promise<void>;
+  retryVideoRequestUpload: (chatId: string, videoRequestId: string) => Promise<void>;
   // updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
   // updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
 }
@@ -93,7 +94,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   }, "Error adding new chat.", "Chat created successfully!") as (editorId: string) => Promise<void>,
 
   deleteChat: axiosErrorHandler(async (chatId) => {
-    await api.delete(`/chat?id=${chatId}`);
+    await api.delete(`/chat/${chatId}`);
     set((state) => ({
       chats: state.chats.filter(chat => chat.id !== chatId),
       activeChat: state.activeChat === chatId ? null : state.activeChat
@@ -105,7 +106,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (chat && !state.messages[chat.id]) {
       const state = get();
       const newMessages = state.messages;
-      const res = await api.get(`/chat?id=${chat.id}`);
+      const res = await api.get(`/chat/${chat.id}`);
       const data = (res.data as Message[]).reverse();
       newMessages[chat.id] = data;
       set({ messages: newMessages });
@@ -148,7 +149,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
     }))
 
-    const resopnse = await api.post("/chat/message/videoRequest", {
+    const resopnse = await api.post("/chat/message/video-request", {
       title: request.title,
       description: request.description,
       chatId,
@@ -162,7 +163,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   }, "Couldn't create a video request, please try again!", ""),
 
   approveVideoRequest: axiosErrorHandler(async (chatId: string, videoRequestId: string) => {
-    await api.post("/chat/approveVideoRequest", {
+    await api.post(`/chat/message/video-request/${videoRequestId}/approve`, {
       chatId, videoRequestId
     });
     set((state) => ({
@@ -182,13 +183,26 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       },
     }));
 
-  }, "Couldn't approve video request, please try again later", "Video upload started, will be live soon!")
+  }, "Couldn't approve video request, please try again later", "Video upload started, will be live soon!"),
 
-  // updateVideoRequestStatus: (chatId, requestId, status) => {
-  //   console.log(chatId, requestId, status);
-  // },
+  retryVideoRequestUpload: axiosErrorHandler(async (chatId: string, videoRequestId: string) => {
+    await api.post(`/chat/message/video-request/${videoRequestId}/retry`);
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [chatId]: state.messages[chatId].map((m) =>
+          m.videoRequest && m.videoRequest.id === videoRequestId
+            ? {
+              ...m,
+              videoRequest: {
+                ...m.videoRequest,
+                status: VideoRequestStatus.APPROVED,
+              },
+            }
+            : m
+        ),
+      },
+    }));
 
-  // updateVideoRequest: (chatId, requestId, updates) => {
-  //   console.log(chatId, requestId, updates);
-  // }
+  }, "Couldn't retry upload, please try again later", "Video upload started, will be live soon!")
 }));

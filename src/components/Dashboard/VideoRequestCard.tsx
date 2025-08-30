@@ -70,7 +70,7 @@ const VideoRequestCard = ({
                         Preview
                     </button>
 
-                    {message.videoRequest.status === "APPROVED" && (
+                    {["APPROVED", "ERROR"].includes(message.videoRequest.status) && (
                         <button
                             onClick={() => {
                                 setSelectedVideoRequest(message.videoRequest!);

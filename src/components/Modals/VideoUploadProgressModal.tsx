@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, Upload, Video, Image, Check } from 'lucide-react';
 import { SERVER_URL } from '../../lib/constants';
 import { VideoRequestData, VideoUploadStatus } from '../../lib/chatStoreTypes';
+import { useChatStore } from '../../stores/chatStore';
 
 interface UploadProgress {
     video: number;
@@ -14,12 +15,14 @@ interface VideoUploadProgressModalProps {
     onClose: () => void;
     videoRequest: VideoRequestData;
     videoTitle: string;
+    chatId: string
 }
 
 const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
     isOpen,
     onClose,
     videoRequest,
+    chatId,
     videoTitle
 }) => {
     const [progress, setProgress] = useState<UploadProgress>({
@@ -28,9 +31,20 @@ const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
         status: 'idle'
     });
     const [eventSource, setEventSource] = useState<EventSource | null>(null);
+    const { retryVideoRequestUpload } = useChatStore();
+
 
     useEffect(() => {
         if (!isOpen || !videoRequest) return;
+
+        if (videoRequest.status == "ERROR") {
+            setProgress({
+                video: 0,
+                thumbnail: 0,
+                status: "idle"
+            });
+            return;
+        }
 
         if (videoRequest.uploadStatus == VideoUploadStatus.THUMBNAIL_UPDATED) {
             setProgress({
@@ -48,7 +62,7 @@ const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
         }
 
         // Initialize SSE connection
-        const sse = new EventSource(`${SERVER_URL}/chat/progress/${videoRequest.id}`, { withCredentials: true });
+        const sse = new EventSource(`${SERVER_URL}/chat/message/video-request/${videoRequest.id}/progress`, { withCredentials: true });
         setEventSource(sse);
 
         sse.onopen = () => {
@@ -103,6 +117,16 @@ const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
         setProgress({ video: 0, thumbnail: 0, status: 'idle' });
         onClose();
     };
+
+    const handleRetry = () => {
+        retryVideoRequestUpload(chatId, videoRequest.id);
+        if (eventSource) {
+            eventSource.close();
+            setEventSource(null);
+        }
+        setProgress({ video: 0, thumbnail: 0, status: 'idle' });
+        onClose();
+    }
 
     if (!isOpen) return null;
 
@@ -170,7 +194,7 @@ const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
                 <div className="p-6 space-y-6">
                     <div className="text-center">
                         <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                            {videoTitle}
+                            {videoTitle.slice(0, 30)} {videoTitle.length > 30 && "..."}
                         </h4>
                         <p className="text-gray-600 dark:text-gray-400">
                             {progress.status === 'completed'
@@ -302,25 +326,35 @@ const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
                         </div>
                     )}
 
-                    {progress.status === 'error' && (
+                    {progress.status === 'error' || videoRequest.status === "ERROR" && (
                         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                             <div className="flex items-center space-x-2">
                                 <X className="w-5 h-5 text-red-600 dark:text-red-400" />
                                 <p className="text-red-800 dark:text-red-200 font-medium">
-                                    Upload failed. Please try again or contact support.
+                                    {videoRequest.errorReason ?? "Upload failed. Please try again or contact support."}
                                 </p>
                             </div>
                         </div>
                     )}
-
-                    <div className="flex justify-end pt-4">
-                        <button
-                            onClick={handleClose}
-                            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                        >
-                            {progress.status === 'completed' ? 'Done' : 'Close'}
-                        </button>
-                    </div>
+                    {progress.status === 'error' || videoRequest.status === "ERROR" ? (
+                        <div className="flex justify-end pt-4">
+                            <button
+                                onClick={handleRetry}
+                                className="px-6 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Try again
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex justify-end pt-4">
+                            <button
+                                onClick={handleClose}
+                                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                                {progress.status === 'completed' ? 'Done' : 'Close'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

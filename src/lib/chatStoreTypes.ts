@@ -1,7 +1,7 @@
 export enum VideoRequestStatus {
     APPROVED = "APPROVED",
     PENDING = "PENDING",
-    CHANGES_REQUESTED = "CHANGES_REQUESTED"
+    ERROR = "ERROR"
 }
 
 export interface VideoRequest {
@@ -45,7 +45,8 @@ export type VideoRequestData = {
     versions: number
     status: VideoRequestStatus;
     createdAt: Date;
-    uploadStatus: VideoUploadStatus
+    uploadStatus: VideoUploadStatus,
+    errorReason: string
 }
 
 export interface Message {

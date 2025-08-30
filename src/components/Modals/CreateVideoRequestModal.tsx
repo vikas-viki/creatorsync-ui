@@ -27,6 +27,7 @@ const CreateVideoRequestModal: React.FC<CreateVideoRequestModalProps> = ({ isOpe
     const thumbnailUrl = URL.createObjectURL(thumbnailFile);
     const videoUrl = URL.createObjectURL(videoFile);
     const videoRequest = {
+      id: "",
       title,
       description,
       videoUrl,

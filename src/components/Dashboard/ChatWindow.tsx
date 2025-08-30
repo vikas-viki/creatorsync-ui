@@ -42,7 +42,6 @@ const ChatWindow: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const file = e.target.files?.[0];
-      console.log("getting url", file);
       if (!file) return;
       const isVideo = file.type.startsWith('video/');
       const isImage = file.type.startsWith('image/');
@@ -206,6 +205,7 @@ const ChatWindow: React.FC = () => {
 
 
       <VideoUploadProgressModal
+        chatId={activeChat.id}
         isOpen={showProgressModal}
         onClose={() => setShowProgressModal(false)}
         videoRequest={selectedVideoRequest!}
