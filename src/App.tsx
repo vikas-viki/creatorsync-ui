@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useThemeStore } from './stores/themeStore';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
@@ -10,12 +10,13 @@ import { useEffect } from 'react';
 
 function App() {
   const { isDarkMode } = useThemeStore();
+  const location = useLocation();
   const { session, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
   const getSession = async () => {
     const res = await session();
-    if (res) {
+    if (res && location.pathname != "/") {
       await navigate('/dashboard');
     }
   }

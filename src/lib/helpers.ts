@@ -24,3 +24,12 @@ export function axiosErrorHandler<T extends (...args: any[]) => Promise<any>>(
         }
     }) as (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>> | undefined>;
 }
+
+
+export const formatTime = (date: Date) => {
+    return new Date(date).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+};

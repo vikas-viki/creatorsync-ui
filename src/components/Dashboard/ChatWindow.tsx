@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef } from 'react';
-import { Send, Paperclip, Play, BarChart3 } from 'lucide-react';
+import { Send, Paperclip } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import CreateVideoRequestModal from '../Modals/CreateVideoRequestModal';
 import VideoPreviewModal from '../Modals/VideoPreviewModal';
 import ApproveVideoModal from '../Modals/ApproveVideoModal';
 import toast from 'react-hot-toast';
 import axios, { isAxiosError } from 'axios';
-import { VideoRequestStatus } from '../../lib/chatStoreTypes';
 import VideoUploadProgressModal from '../Modals/VideoUploadProgressModal';
+import VideoRequestCard from './VideoRequestCard';
+import { VideoRequestData } from '../../lib/chatStoreTypes';
+import MessageCard from './MessageCard';
 
 const ChatWindow: React.FC = () => {
   const { activeChat, addTextMessage, messages, mediaMessage } = useChatStore();
@@ -18,7 +20,7 @@ const ChatWindow: React.FC = () => {
   const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
-  const [selectedVideoRequest, setSelectedVideoRequest] = useState<any>(null);
+  const [selectedVideoRequest, setSelectedVideoRequest] = useState<VideoRequestData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!activeChat || !user) return null;
@@ -74,24 +76,6 @@ const ChatWindow: React.FC = () => {
     e.target.value = "";
   };
 
-  const handleVideoRequestAction = (action: 'approve' | 'changes', request: any) => {
-    setSelectedVideoRequest(request);
-    if (action === 'approve') {
-      setShowApproveModal(true);
-    } else {
-      // Handle request changes
-      console.log('Request changes for:', request);
-    }
-  };
-
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
   const otherUserName = user.type.toLowerCase() === 'creator' ? activeChat.editorName : activeChat.creatorName;
 
   return (
@@ -108,7 +92,7 @@ const ChatWindow: React.FC = () => {
           {user.type.toLowerCase() === 'editor' && (
             <button
               onClick={() => setShowCreateVideoRequest(true)}
-              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
               Create Video Request
             </button>
@@ -136,88 +120,17 @@ const ChatWindow: React.FC = () => {
 
               return (
                 <div key={message.id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.type == "video_request" && "bg-sky-300 text-black"} ${isOwnMessage
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                    }`}>
-                    {message.type === 'video_request' && message.videoRequest ? (
-                      <div className="space-y-3 ">
-                        <div className="flex items-center space-x-2">
-                          <Play className="w-5 h-5" />
-                          <span className="font-medium">Video Request</span>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">{message.videoRequest.title}</h4>
-                          <p className="text-sm opacity-90 mt-1">{message.videoRequest.description}</p>
-                        </div>
-
-                        <div className="flex space-x-2 pt-2">
-                          <button
-                            onClick={() => {
-                              setSelectedVideoRequest(message.videoRequest);
-                              setShowVideoPreview(true);
-                            }}
-                            className="px-3 py-1 bg-gray-500/20 hover:bg-white/30 rounded text-sm font-medium transition-colors"
-                          >
-                            Preview
-                          </button>
-
-                          {message.videoRequest.status === "APPROVED" && (
-                            <button
-                              onClick={() => {
-                                setSelectedVideoRequest(message.videoRequest);
-                                setShowProgressModal(true);
-                              }}
-                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors flex items-center space-x-1"
-                            >
-                              <BarChart3 className="w-3 h-3" />
-                              <span>Progress</span>
-                            </button>
-                          )}
-
-                          {user.type.toLowerCase() === 'creator' && message.videoRequest.status === VideoRequestStatus.PENDING && (
-                            <>
-                              <button
-                                onClick={() => handleVideoRequestAction('approve', message.videoRequest)}
-                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors"
-                              >
-                                Approve
-                              </button>
-                            </>
-                          )}
-                        </div>
-
-                        {message.videoRequest.status !== VideoRequestStatus.PENDING && (
-                          <div className={`text-sm font-medium ${message.videoRequest.status === VideoRequestStatus.APPROVED ? 'text-green-200' : 'text-yellow-200'
-                            }`}>
-                            {message.videoRequest.status === VideoRequestStatus.APPROVED ? '✅ Approved' : '⏳ Changes Requested'}
-                          </div>
-                        )}
-                      </div>
-                    ) : message.type === 'image' || message.type === 'video' ? (
-                      <div>
-                        {message.type === 'image' ? (
-                          <img
-                            src={message.content}
-                            alt="Uploaded"
-                            className="max-w-full h-auto rounded"
-                          />
-                        ) : (
-                          <video
-                            src={message.content}
-                            controls
-                            className="max-w-full h-auto rounded"
-                          />
-                        )}
-                      </div>
-                    ) : (
-                      <p>{message.content}</p>
-                    )}
-
-                    <p className={`text-xs mt-1 ${isOwnMessage ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
-                      {formatTime(message.createdAt)}
-                    </p>
-                  </div>
+                  {message.type === 'video_request' && message.videoRequest ? (
+                    <VideoRequestCard
+                      message={message}
+                      setSelectedVideoRequest={setSelectedVideoRequest}
+                      setShowApproveModal={setShowApproveModal}
+                      setShowVideoPreview={setShowVideoPreview}
+                      setShowProgressModal={setShowProgressModal}
+                    />
+                  ) : (
+                    <MessageCard message={message} />
+                  )}
                 </div>
               );
             })
@@ -295,7 +208,7 @@ const ChatWindow: React.FC = () => {
       <VideoUploadProgressModal
         isOpen={showProgressModal}
         onClose={() => setShowProgressModal(false)}
-        videoRequest={selectedVideoRequest}
+        videoRequest={selectedVideoRequest!}
         videoTitle={selectedVideoRequest?.title || ''}
       />
     </>

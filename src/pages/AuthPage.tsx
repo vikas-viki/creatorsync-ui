@@ -31,8 +31,9 @@ const AuthPage: React.FC = () => {
         success = await signup(userData);
       }
 
-      if (success)
+      if (success) {
         navigate('/dashboard');
+      }
     },
     onError: (errorResponse) => {
       console.log("error: ", errorResponse);
