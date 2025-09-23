@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Users, Shield, Zap, Moon, Sun } from 'lucide-react';
 import { useThemeStore } from '../stores/themeStore';
@@ -6,6 +6,7 @@ import { useThemeStore } from '../stores/themeStore';
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useThemeStore();
+  const [videoPlayed, setVideoPlayed] = useState(false);
 
   const features = [
     {
@@ -77,24 +78,34 @@ const HomePage: React.FC = () => {
 
         {/* Demo Video */}
         <div className="max-w-4xl mx-auto animate-slide-up mb-32 sm:mb-40">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
-            <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-              <div className="text-center">
-                <Play className="w-16 sm:w-20 h-16 sm:h-20 text-white mb-4 mx-auto opacity-80" />
-                <p className="text-white text-base sm:text-lg md:text-xl font-medium">
-                  Demo Video Coming Soon
-                </p>
-                <p className="text-gray-300 text-xs sm:text-sm mt-1 sm:mt-2">
-                  See how CreatorSync transforms collaboration
-                </p>
-              </div>
-            </div>
+          <div className="relative rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 w-[900px] h-auto min-h-[500px] flex items-center justify-center overflow-hidden shadow-2xl bg-gray-900">
+            {
+              videoPlayed ? (
+                <video autoPlay muted controls loop className=''>
+                  <source src="https://d2lj6kahabpkaf.cloudfront.net/creatorsync/creator-sync.mp4" type="video/mp4" />
+                </video>
+              ) : (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setVideoPlayed(true);
+                  }}
+                  className=" flex items-center cursor-pointer justify-center">
+                  <div className="text-center">
+                    <Play className="w-16 sm:w-20 h-16 sm:h-20 text-white mb-4 mx-auto opacity-80" />
+                    <p className="text-gray-300 text-xs sm:text-sm mt-1 sm:mt-2">
+                      See how CreatorSync transforms collaboration
+                    </p>
+                  </div>
+                </div>
+              )
+            }
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
           </div>
-        </div>
+        </div >
 
         {/* Features */}
-        <div>
+        < div >
           <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12 sm:mb-16">
             Why Choose CreatorSync?
           </h3>
@@ -116,9 +127,9 @@ const HomePage: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
-      </main>
-    </div>
+        </div >
+      </main >
+    </div >
   );
 };
 
