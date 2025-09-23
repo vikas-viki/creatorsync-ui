@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 export interface ChatStore {
   user: User | null;
   chats: Chat[];
+  totalMessages: Record<string, number>, // total messages in each chat (chatId=>Count)
   messages: Record<string, Message[]>,
   activeChat: ActiveChat | null;
   setUserData: (username: string, userId: string, type: UserType, isYoutubeConnected: boolean) => void;
@@ -15,19 +16,19 @@ export interface ChatStore {
   getAllChats: () => Promise<void>;
   mediaMessage: (contentType: string, chatId: string, url: string) => Promise<SignedUrlResponse | undefined>;
   deleteChat: (chatId: string) => void;
-  setActiveChat: (chatId: ActiveChat | null) => void;
+  setActiveChat: (chat: ActiveChat | null) => void;
   addTextMessage: (chatId: string, message: string) => Promise<void>;
   addVideoRequest: (chatId: string, request: VideoRequest) => Promise<VideoRequestResponse | undefined>;
   approveVideoRequest: (chatId: string, videoRequestId: string) => Promise<void>;
   retryVideoRequestUpload: (chatId: string, videoRequestId: string) => Promise<void>;
-  // updateVideoRequestStatus: (chatId: string, requestId: string, status: VideoRequest['status']) => void;
-  // updateVideoRequest: (chatId: string, requestId: string, updates: Partial<VideoRequest>) => void;
+  getOlderMessages: (chatId: string) => Promise<void>;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   chats: [],
   messages: {},
   user: null,
+  totalMessages: {},
   setChats: (chats) => {
     set({ chats });
   },
@@ -39,6 +40,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     })
   },
   activeChat: null,
+  getOlderMessages: axiosErrorHandler(async (chatId) => {
+    const state = get();
+    const currentMessages = state.messages[chatId]?.length || 0;
+    const totalMessages = state.totalMessages[chatId];
+
+    if (totalMessages - currentMessages > 0) {
+      const res = await api.get(`/chat/${chatId}?skip=${currentMessages}`);
+      const messages = (res.data.messages as Message[]).reverse();
+      const fetchedTotalMessages = res.data.totalMessages;
+
+      set({
+        messages: {
+          ...state.messages,
+          [chatId]: [...messages, ...(state.messages[chatId] || [])]
+        },
+        totalMessages: {
+          ...state.totalMessages,
+          [chatId]: fetchedTotalMessages
+        }
+      });
+    }
+  }, "Error getting messages", ""),
   mediaMessage: axiosErrorHandler(
     async (contentType: string, chatId: string, url: string) => {
       const res = await api.post("/chat/message/media", { contentType, chatId });
@@ -106,10 +129,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (chat && !state.messages[chat.id]) {
       const state = get();
       const newMessages = state.messages;
-      const res = await api.get(`/chat/${chat.id}`);
-      const data = (res.data as Message[]).reverse();
+      const res = await api.get(`/chat/${chat.id}?skip=0`);
+      const data = (res.data.messages as Message[]).reverse();
+      const totalMessages = res.data.totalMessages;
+
       newMessages[chat.id] = data;
-      set({ messages: newMessages });
+      set({
+        messages: newMessages, totalMessages: {
+          ...state.totalMessages,
+          [chat.id]: totalMessages
+        }
+      });
     }
     set({ activeChat: chat })
   }, "Error getting chats", ""),

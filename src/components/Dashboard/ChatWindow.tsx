@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, SyntheticEvent } from 'react';
 import { Send, Paperclip } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import CreateVideoRequestModal from '../Modals/CreateVideoRequestModal';
@@ -14,7 +14,7 @@ import MessageCard from './MessageCard';
 
 const ChatWindow: React.FC = () => {
   const { activeChat, addTextMessage, messages, mediaMessage } = useChatStore();
-  const { user } = useChatStore();
+  const { user, getOlderMessages } = useChatStore();
   const [messageText, setMessageText] = useState('');
   const [showCreateVideoRequest, setShowCreateVideoRequest] = useState(false);
   const [showVideoPreview, setShowVideoPreview] = useState(false);
@@ -22,22 +22,16 @@ const ChatWindow: React.FC = () => {
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedVideoRequest, setSelectedVideoRequest] = useState<VideoRequestData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingRef = useRef(false);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   if (!activeChat || !user) return null;
-
-  const handleSendMessage = async () => {
-    if (!messageText.trim()) return;
-
-    await addTextMessage(activeChat.id, messageText.trim());
-    setMessageText('');
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -75,7 +69,38 @@ const ChatWindow: React.FC = () => {
     e.target.value = "";
   };
 
+  const handleScroll = async (e: SyntheticEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop <= 0 && !isFetchingRef.current) {
+      isFetchingRef.current = true;
+
+      const prevScrollHeight = target.scrollHeight;
+      await getOlderMessages(activeChat.id);
+
+      if (scrollRef.current) {
+        const newScrollHeight = scrollRef.current.scrollHeight;
+        scrollRef.current.scrollTop = newScrollHeight - prevScrollHeight;
+      }
+
+      isFetchingRef.current = false;
+    }
+  };
+
   const otherUserName = user.type.toLowerCase() === 'creator' ? activeChat.editorName : activeChat.creatorName;
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim()) return;
+
+    await addTextMessage(activeChat.id, messageText.trim());
+    setMessageText('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   return (
     <>
@@ -98,7 +123,10 @@ const ChatWindow: React.FC = () => {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900">
           {messages[activeChat.id].length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -161,7 +189,7 @@ const ChatWindow: React.FC = () => {
               className="hidden"
             />
 
-            <div className="flex-1">
+            <div className="flex-1 h-max">
               <textarea
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
@@ -175,7 +203,7 @@ const ChatWindow: React.FC = () => {
             <button
               onClick={handleSendMessage}
               disabled={!messageText.trim()}
-              className="p-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="p-2 mb-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               <Send className="w-5 h-5" />
             </button>

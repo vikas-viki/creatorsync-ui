@@ -66,14 +66,12 @@ const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
         setEventSource(sse);
 
         sse.onopen = () => {
-            console.log('SSE connection opened for video:', videoRequest.id);
             setProgress(prev => ({ ...prev, status: 'uploading' }));
         };
 
         sse.onmessage = (event) => {
             try {
                 const data = event.data;
-                console.log('SSE data received:', data);
 
                 let videoProgress = 0;
                 let thumbnailProgress = 0;
@@ -164,9 +162,6 @@ const VideoUploadProgressModal: React.FC<VideoUploadProgressModalProps> = ({
         if (fromIndex >= checkpoints.length - 1) return 0;
 
         const fromCheckpoint = checkpoints[fromIndex];
-        const toCheckpoint = checkpoints[toIndex];
-
-        console.log({ toCheckpoint })
 
         if (fromCheckpoint.completed) return 100;
         if (fromIndex === 1 && toIndex === 2) return progress.video; // Video to thumbnail
